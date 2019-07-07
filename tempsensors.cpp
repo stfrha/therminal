@@ -171,11 +171,11 @@ bool TempSensors::configurationSequence(void)
    baseTemp[0] = sampleSensor(localSensorPaths[0]);
    baseTemp[1] = sampleSensor(localSensorPaths[1]);
    
-   int solarSensorIndex = -1;
+   int poolSensorIndex = -1;
    
    cout << "Current temperatures: Sensor 1: " << baseTemp[0] << ", Sensor 2: " << baseTemp[1] << endl;
    
-   cout << "Warm up the solar sensor by at least four degrees!" << endl;
+   cout << "Warm up the pool sensor by at least four degrees!" << endl;
    cout << "Waiting for temperature change..." << endl;
 
    do
@@ -191,22 +191,22 @@ bool TempSensors::configurationSequence(void)
       {
          if ((currTemp[i] > baseTemp[i] + 4.0))
          {
-            solarSensorIndex = i;
+            poolSensorIndex = i;
          }
       }
-   } while (solarSensorIndex == -1);
+   } while (poolSensorIndex == -1);
    
-   cout << "Solar sensor is sensor number: " << solarSensorIndex + 1 << endl;
+   cout << "Pool sensor is sensor number: " << poolSensorIndex + 1 << endl;
    
-   if (solarSensorIndex == 0)
+   if (poolSensorIndex == 0)
    {
-      m_sensorPaths[solarSensor] = localSensorPaths[0];
-      m_sensorPaths[poolSensor] = localSensorPaths[1];
+      m_sensorPaths[poolSensor] = localSensorPaths[0];
+      m_sensorPaths[solarSensor] = localSensorPaths[1];
    }
    else
    {
-      m_sensorPaths[solarSensor] = localSensorPaths[1];
-      m_sensorPaths[poolSensor] = localSensorPaths[0];
+      m_sensorPaths[poolSensor] = localSensorPaths[1];
+      m_sensorPaths[solarSensor] = localSensorPaths[0];
    }
    
    return true;
