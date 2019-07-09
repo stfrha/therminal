@@ -43,9 +43,6 @@ int main(int argc, char *argv[])
    long usNow;
    long usPeriod = 3000000;
    
-   cout << "Target time is: " << usPeriod << endl;
-  
-  
    while(true)
    {
       // Save time at start of this step
@@ -65,16 +62,11 @@ int main(int argc, char *argv[])
          << ", Pool: " << ts.getLatestTemperature(TempSensors::poolSensor) << endl;
          
       light = !light;
-      ///... until here
+      //... until here
 
       gettimeofday(&tv, NULL); 
       usNow = tv.tv_sec * 1000000 + tv.tv_usec;
 
-      cout << "Start time was: " << usStartTime << endl;
-      cout << "Now is: " << usNow << endl;
-      
-      cout << "Will now wait for this many milliseconds: " << usPeriod - (usNow - usStartTime) << endl;
-      
       std::this_thread::sleep_for(
          std::chrono::microseconds(
             usPeriod - (usNow - usStartTime)));
