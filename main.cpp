@@ -23,14 +23,28 @@ int main(int argc, char *argv[])
    fs.close();
 
    wiringPiSetup();
-   int highLed = 2;
-   int lowLed = 3;
+   int solarPumpLed = 2;
+   int filterPumpLed = 3;
+   int solarPump = 4;
+   int filterPump = 5;
+   int light1 = HIGH;
+   int light2 = LOW;
 
-   pinMode(highLed, OUTPUT);
-   pinMode(lowLed, OUTPUT);
+   cout << "Welcome to THERMINAL pool solar casther mamangement!" << endl;
 
-   cout << "Hello world, testing wiringPi..." << endl;
+   cout << "Setting up HW..." << endl;
 
+   pinMode(solarPumpLed, OUTPUT);
+   pinMode(filterPumpLed, OUTPUT);
+   pinMode(solarPump, OUTPUT);
+   pinMode(filterPump, OUTPUT);
+
+   cout << "Will now wait for three seconds..." << endl;
+
+   sleep(3);
+
+   cout << "Continuing..." << endl;
+   
    TempSensors ts;
    
    ts.initializeTempSensors();
@@ -39,12 +53,21 @@ int main(int argc, char *argv[])
    {
       ts.sampleSensors();
 
-      digitalWrite(highLed, HIGH);
-      digitalWrite(lowLed, LOW);
+      digitalWrite(solarPumpLed, light1);
+      digitalWrite(filterPumpLed, light2);
+      digitalWrite(solarPump, light1);
+      digitalWrite(filterPump, light2);
 
-      int t = highLed;
-      highLed = lowLed;
-      lowLed = t;
+      if (light1 == HIGH)
+      {
+         light1 = LOW;
+         light2 = HIGH;
+      }
+      else
+      {
+         light1 = HIGH;
+         light2 = LOW;
+      }
       
       sleep(1);
    }
