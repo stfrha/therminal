@@ -9,7 +9,7 @@
 
 #include <wiringPi.h>
 
-#include "tempsensors.h"
+#include "relaycontrol.h"
 
 using namespace std;
 
@@ -21,7 +21,7 @@ RelayControl::RelayControl()
    m_ledControl[filterPump] = 3;
 }
 
-int RelayControl::initializeRelay()
+int RelayControl::initializeRelays()
 {
    wiringPiSetup();
 
@@ -32,7 +32,7 @@ int RelayControl::initializeRelay()
 }
 
 
-void RelayControl::setRelay(bool solar, bool filter)
+void RelayControl::setRelays(bool solar, bool filter)
 {
    digitalWrite(m_relayControl[solarPump], solar);
    digitalWrite(m_ledControl[solarPump], solar);

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<therminalLog>
+   <logEntry
+      dateTime="2011-10-08T07:07:09Z"
+      poolTemp="28.45"
+      solarTemp="32.2"
+      filterPump="on"
+      solarPimp="off" />
+   <logEntry
+      dateTime="2011-10-08T07:07:09Z"
+      poolTemp="28.45"
+      solarTemp="32.2"
+      filterPump="on"
+      solarPimp="off" />
+   <logEntry
+      dateTime="2011-10-08T07:07:09Z"
+      poolTemp="28.45"
+      solarTemp="32.2"
+      filterPump="on"
+      solarPimp="off" />
+   <logEntry
+      dateTime="2011-10-08T07:07:09Z"
+      poolTemp="28.45"
+      solarTemp="32.2"
+      filterPump="on"
+      solarPimp="off" />
+   <logEntry
+      dateTime="2011-10-08T07:07:09Z"
+      poolTemp="28.45"
+      solarTemp="32.2"
+      filterPump="on"
+      solarPimp="off" />
+</therminalLog>

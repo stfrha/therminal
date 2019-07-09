@@ -20,7 +20,7 @@ public:
    RelayControl();
    
    // Returns 0 if success, otherwise some error number
-   int initializeRelay();
+   int initializeRelays();
    
-   void setRelay(bool solar, bool filter);
+   void setRelays(bool solar, bool filter);
 };
