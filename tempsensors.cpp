@@ -270,8 +270,6 @@ void TempSensors::sampleSensors()
    {
       m_latestTemperature[i] = sampleSensor(m_sensorPaths[i]);
    }
-   
-   cout << "Current temperatures: Solar: " << m_latestTemperature[0] << ", Pool: " << m_latestTemperature[1] << endl;
 }
 
 float TempSensors::getLatestTemperature(TempSensorId id)
