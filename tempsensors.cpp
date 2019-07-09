@@ -4,7 +4,9 @@
 
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <string>
+#include <cstring>
+
 #include <time.h>
 
 #include "../pugixml/src/pugixml.hpp"

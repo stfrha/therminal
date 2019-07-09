@@ -25,18 +25,18 @@ int RelayControl::initializeRelays()
 {
    wiringPiSetup();
 
-   pinMode(solarPumpLed, OUTPUT);
-   pinMode(filterPumpLed, OUTPUT);
-   pinMode(solarPump, OUTPUT);
-   pinMode(filterPump, OUTPUT);
+   pinMode(m_ledControl[solarPump], OUTPUT);
+   pinMode(m_ledControl[filterPump], OUTPUT);
+   //pinMode(m_relayControl[solarPump], OUTPUT);
+   //pinMode(m_relayControl[filterPump], OUTPUT);
 }
 
 
 void RelayControl::setRelays(bool solar, bool filter)
 {
-   digitalWrite(m_relayControl[solarPump], solar);
+   //digitalWrite(m_relayControl[solarPump], solar);
    digitalWrite(m_ledControl[solarPump], solar);
-   digitalWrite(m_relayControl[filterPump], filter);
+   //digitalWrite(m_relayControl[filterPump], filter);
    digitalWrite(m_ledControl[filterPump], filter);
 }
 
