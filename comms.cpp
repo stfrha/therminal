@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -25,7 +24,23 @@
 #include <errno.h> 
 #include <arpa/inet.h> //close 
 
+#include "comms.h"
+
 using namespace std;
+
+// Global variables:
+
+// The message queue
+extern pthread_mutex_t msgQueuMutex;
+extern vector<string> g_messageQueue;
+
+// Conditional variable to indicate message in queue
+extern pthread_cond_t g_cv;
+extern pthread_mutex_t g_cvLock;
+
+// Both threads needs to agree on port number, 
+// and both threads are static, i.e. make it global
+int g_portNum = 51717;
 
 void error(const char *msg)
 {
@@ -33,30 +48,31 @@ void error(const char *msg)
     exit(1);
 }
 
-// Both threads needs to agree on port number, make it global
-int g_portNum = 51717;
+Comms::Comms()
+{
+}
 
-// The message queue
-pthread_mutex_t msgQueuMutex = PTHREAD_MUTEX_INITIALIZER;
-std::vector<string> g_messageQueue;
+void Comms::initializeComms(void)
+{
+   pthread_t threadId;
 
-// Conditional variable to indicate message in queue
-pthread_cond_t g_cv;
-pthread_mutex_t g_cvLock;
+   int result = pthread_create(&threadId, NULL, serverThread, NULL);
+   if (result)
+   {
+      cout << "Server Thread could not be created, " << result << endl;
+      exit(1);
+   }
+   
+   result = pthread_create(&threadId, NULL, stepThread, NULL);
+   if (result)
+   {
+      cout << "Step Thread could not be created, " << result << endl;
+      exit(1);
+   }
+  
+}
 
-/* Messages are:
-
-STEP  - Execute step of measurements and pump control
-AUTO  - Go to automatic control
-MANL  - Go to manual control
-S_ON  - Force Solar pump on, ignored in AUTO
-SOFF  - Force Solar pump off, ignored in AUTO
-F_ON  - Force Filter pump on, ignored in AUTO
-FOFF  - Force Filter pump off, ignored in AUTO
-
-*/
-
-void* stepThread(void* threadId)
+void* Comms::stepThread(void* threadId)
 {
    cout << "CLIENT: Waiting before connecting." << endl;
    sleep(3);
@@ -164,7 +180,7 @@ void* stepThread(void* threadId)
 }
 
 
-void* serverThread(void* threadId)
+void* Comms::serverThread(void* threadId)
 {
    cout << "SERVER: Now trying to create sockets..." << endl;
    
@@ -376,44 +392,3 @@ void* serverThread(void* threadId)
    }
 }
 
-
-int main(int argc, char *argv[])
-{
-   cout << "Welcome to socket server with multi threaded clients!" << endl;
-
-   pthread_t threadId;
-
-   int result = pthread_create(&threadId, NULL, serverThread, NULL);
-   if (result)
-   {
-      cout << "Server Thread could not be created, " << result << endl;
-      exit(1);
-   }
-   
-   result = pthread_create(&threadId, NULL, stepThread, NULL);
-   if (result)
-   {
-      cout << "Step Thread could not be created, " << result << endl;
-      exit(1);
-   }
-      
-   while (true)
-   {
-      pthread_mutex_lock(&g_cvLock);
-      pthread_cond_wait(&g_cv, &g_cvLock);
-      pthread_mutex_unlock(&g_cvLock);
-      
-      pthread_mutex_lock( &msgQueuMutex );
-      int l = g_messageQueue.size();
-      cout << "In main loop, queue has: " << l << " entries." << endl;
-
-      for (int i = 0; i < l; i++)
-      {
-         cout << "Message " << i << ": " << g_messageQueue[i] << endl;
-      }
-
-      pthread_mutex_unlock( &msgQueuMutex );
-   }
-   
-   return 0;
-}
