@@ -34,12 +34,15 @@ void error(const char *msg)
     exit(1);
 }
 
+// Both threads needs to agree on port number, make it global
+int g_portNum = 51717;
+
 void* threadRoutine(void* threadId)
 {
    cout << "CLIENT: Waiting before connecting." << endl;
    sleep(3);
    
-   int masterSockfd, portno, n;
+   int masterSockfd, n;
    struct sockaddr_in serv_addr;
    struct hostent *server;
 
@@ -48,7 +51,6 @@ void* threadRoutine(void* threadId)
 
    char buffer[256];
    
-   portno = 51717;
    masterSockfd = socket(AF_INET, SOCK_STREAM, 0);
    if (masterSockfd < 0) 
    {
@@ -70,7 +72,7 @@ void* threadRoutine(void* threadId)
    bcopy((char *)server->h_addr, 
    (char *)&serv_addr.sin_addr.s_addr,
    server->h_length);
-   serv_addr.sin_port = htons(portno);
+   serv_addr.sin_port = htons(g_portNum);
 
    if (connect(masterSockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
    {
@@ -98,18 +100,45 @@ void* threadRoutine(void* threadId)
 
    cout << "CLIENT: Answer received: " << buffer << endl;
    
-   close(masterSockfd);
-
-   cout << "CLIENT: Socket closed." << endl;
    
    long tid;
    tid = (long)threadId;
    
-   while (true)
+   for (int i = 0; i < 5; i++)
    {
-      cout << "Tock!" << endl;
+      cout << "CLIENT: Tock!" << endl;
+      
+      strcpy(buffer, "Tock");
+
+      cout << "CLIENT: Will send: '" << buffer << "', of " << strlen(buffer) << " lenght." << endl;
+
+      n = write(masterSockfd,buffer,strlen(buffer));
+      
+      if (n < 0) 
+      {
+         error("ERROR writing to socket");
+      }
+
+      cout << "CLIENT: Message sent." << endl;
+
+      bzero(buffer,256);
+      n = read(masterSockfd,buffer,255);
+      
+      if (n < 0) 
+      {
+         error("ERROR reading from socket");
+      }
+
+      cout << "CLIENT: Answer received: " << buffer << endl;
+      
+      
       sleep(3);
    }
+
+   close(masterSockfd);
+
+   cout << "CLIENT: Socket closed." << endl;
+
 }
 
 int main(int argc, char *argv[])
@@ -120,9 +149,8 @@ int main(int argc, char *argv[])
    
    int masterSockfd;
    int newSockfd;
-   int portno;
    socklen_t clilen;
-   char buffer[256];
+   char buffer[1024];
    struct sockaddr_in serv_addr;
    struct sockaddr_in cli_addr;
    int n;
@@ -140,10 +168,14 @@ int main(int argc, char *argv[])
 
    strcpy(message, "ECHO Daemon v1.0 \r\n");
 
+   //initialise all clientSocket[] to 0 so not checked 
+	for (i = 0; i < max_clients; i++) 
+	{ 
+		clientSocket[i] = 0; 
+	} 
    
    //set of socket descriptors 
 	fd_set readfds; 
-
 
    masterSockfd = socket(AF_INET, SOCK_STREAM, 0);
    if (masterSockfd < 0) 
@@ -153,17 +185,29 @@ int main(int argc, char *argv[])
    cout << "SERVER: Socket openend." << endl;
    
    bzero((char *) &serv_addr, sizeof(serv_addr));
-   portno = 51717;
+   g_portNum = 51717;
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
-   serv_addr.sin_port = htons(portno);
-   if (bind(masterSockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+   serv_addr.sin_port = htons(g_portNum);
+   
+   while (bind(masterSockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
    {
-      error("ERROR on binding");
+      if (errno == EADDRINUSE)
+      {
+         cout << "Port " << g_portNum << " is already in use. ";
+         g_portNum++;
+         serv_addr.sin_port = htons(g_portNum);
+         cout << "Trying " << g_portNum << " instead." << endl;
+      }
+      else
+      {
+         error("ERROR on binding");
+      }
    }
+      
    cout << "SERVER: Socket bound." << endl;
 
-
+   
    cout << "SERVER: Creating thread..." << endl;
    
    pthread_t threadId;
@@ -179,9 +223,178 @@ int main(int argc, char *argv[])
    
    listen(masterSockfd,5);
    clilen = sizeof(cli_addr);
+
+   while (true)
+   {
+		//clear the socket set 
+		FD_ZERO(&readfds); 
+	
+		//add master socket to set 
+		FD_SET(masterSockfd, &readfds); 
+		max_sd = masterSockfd; 
+			
+		//add child sockets to set 
+		for ( i = 0 ; i < max_clients ; i++) 
+		{ 
+			//socket descriptor 
+			sd = clientSocket[i]; 
+				
+			//if valid socket descriptor then add to read list 
+			if(sd > 0) 
+         {
+            FD_SET( sd , &readfds); 
+         }
+				
+			//highest file descriptor number, need it for the select function 
+			if(sd > max_sd) 
+         {
+            max_sd = sd; 
+         }
+		} 
+      
+      //wait for an activity on one of the sockets , timeout is NULL , 
+		//so wait indefinitely 
+		activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL); 
+	
+		if ((activity < 0) && (errno!=EINTR)) 
+		{ 
+         cout << "SERVER: Error in select!" << endl;
+         exit(1);
+		} 
+
+		//If something happened on the master socket , 
+		//then its an incoming connection 
+		if (FD_ISSET(masterSockfd, &readfds)) 
+		{ 
+   
+         newSockfd = accept(masterSockfd, (struct sockaddr *) &cli_addr, &clilen);
+         if (newSockfd < 0) 
+         {
+            error("ERROR on accept");
+         }
+         cout << "SERVER: Socket accepted." << endl;
+   
+			//inform user of socket number - used in send and receive commands 
+			printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , newSockfd , inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
+		
+         bzero(buffer,256);
+         n = read(newSockfd,buffer,255);
+         if (n < 0) 
+         {
+            error("ERROR reading from socket");
+         }
+         cout << "SERVER: Message received from new client: " << buffer << endl;
+
+         n = write(newSockfd,"I got your message",18);
+         if (n < 0) 
+         {
+            error("ERROR writing to socket");
+         }
+         cout << "SERVER: Answer sent." << endl;
+				
+			//add new socket to array of sockets 
+			for (i = 0; i < max_clients; i++) 
+			{ 
+				//if position is empty 
+				if( clientSocket[i] == 0 ) 
+				{ 
+					clientSocket[i] = newSockfd; 
+					cout << "Adding to list of sockets as " << i << endl;
+					break; 
+				} 
+			} 
+		} 
+			
+		//else its some IO operation on some other socket 
+		for (i = 0; i < max_clients; i++) 
+		{ 
+			sd = clientSocket[i]; 
+				
+			if (FD_ISSET( sd , &readfds)) 
+			{ 
+				//Check if it was for closing , and also read the 
+				//incoming message 
+				if ((valread = read( sd , buffer, 1024)) == 0) 
+				{ 
+					//Somebody disconnected , get his details and print 
+					getpeername(sd , (struct sockaddr*)&cli_addr , &clilen); 
+					printf("Host disconnected , ip %s , port %d \n" , 
+						inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
+						
+					//Close the socket and mark as 0 in list for reuse 
+					close( sd ); 
+					clientSocket[i] = 0; 
+				} 
+					
+				//Echo back the message that came in 
+				else
+				{ 
+               // Terminate receiver string after the number of bytes received.
+               buffer[valread] = 0;
+               
+               cout << "SERVER: Message received from new client: " << buffer << endl;
+
+               n = write(sd,"I got your message",18);
+               if (n < 0) 
+               {
+                  error("ERROR writing to socket");
+               }
+               cout << "SERVER: Answer sent." << endl;
+				} 
+			} 
+		} 
+   }
    
    
    
+   
+   
+/*   
+   
+   
+   
+   newSockfd = accept(masterSockfd, 
+   (struct sockaddr *) &cli_addr, 
+   &clilen);
+   if (newSockfd < 0) 
+   {
+      error("ERROR on accept");
+   }
+   cout << "SERVER: Socket accepted." << endl;
+   
+   bzero(buffer,256);
+   n = read(newSockfd,buffer,255);
+   if (n < 0) 
+   {
+      error("ERROR reading from socket");
+   }
+   cout << "SERVER: Message received: " << buffer << endl;
+
+   n = write(newSockfd,"I got your message",18);
+   if (n < 0) 
+   {
+      error("ERROR writing to socket");
+   }
+   cout << "SERVER: Answer sent." << endl;
+
+   close(newSockfd);
+   close(masterSockfd);
+
+   cout << "SERVER: Socket closed." << endl;
+   
+   while(true)
+   {
+
+      cout << "Tick!" << endl;
+
+      sleep(1);
+   }
+
+
+*/
+   
+   
+   /*
    
    	//accept the incoming connection 
 	puts("Waiting for connections ..."); 
@@ -203,11 +416,15 @@ int main(int argc, char *argv[])
 				
 			//if valid socket descriptor then add to read list 
 			if(sd > 0) 
-				FD_SET( sd , &readfds); 
+         {
+            FD_SET( sd , &readfds); 
+         }
 				
 			//highest file descriptor number, need it for the select function 
 			if(sd > max_sd) 
-				max_sd = sd; 
+         {
+            max_sd = sd; 
+         }
 		} 
 	
 		//wait for an activity on one of the sockets , timeout is NULL , 
@@ -292,44 +509,13 @@ int main(int argc, char *argv[])
    
    
    
+   
+   
+   
+   
+   
    /*
    
-   newSockfd = accept(masterSockfd, 
-   (struct sockaddr *) &cli_addr, 
-   &clilen);
-   if (newSockfd < 0) 
-   {
-      error("ERROR on accept");
-   }
-   cout << "SERVER: Socket accepted." << endl;
-   
-   bzero(buffer,256);
-   n = read(newSockfd,buffer,255);
-   if (n < 0) 
-   {
-      error("ERROR reading from socket");
-   }
-   cout << "SERVER: Message received: " << buffer << endl;
-
-   n = write(newSockfd,"I got your message",18);
-   if (n < 0) 
-   {
-      error("ERROR writing to socket");
-   }
-   cout << "SERVER: Answer sent." << endl;
-
-   close(newSockfd);
-   close(masterSockfd);
-
-   cout << "SERVER: Socket closed." << endl;
-   
-   while(true)
-   {
-
-      cout << "Tick!" << endl;
-
-      sleep(1);
-   }
 
    */
    return 0;
