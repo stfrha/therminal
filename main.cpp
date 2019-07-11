@@ -15,10 +15,8 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "tempsensors.h"
-#include "relaycontrol.h"
-#include "logger.h"
 #include "comms.h"
+#include "controller.h"
 
 using namespace std;
 
@@ -46,20 +44,12 @@ FOFF  - Force Filter pump off, ignored in AUTO
 
 int main(int argc, char *argv[])
 {
-   bool light = false;
-   
-   TempSensors ts;
-   RelayControl rc;
-   Logger log;
    Comms comms;
+   Controller cntrl;
 
    cout << "Welcome to THERMINAL pool solar catcher mamangement!" << endl;
 
-   cout << "Setting up HW..." << endl;
-   
-   rc.initializeRelays();   
-   ts.initializeTempSensors();
-   log.initializeLog();
+   cntrl.initializeController();
    comms.initializeComms();
 
 /*   
@@ -77,6 +67,14 @@ int main(int argc, char *argv[])
       pthread_mutex_unlock(&g_cvLock);
       
       pthread_mutex_lock( &msgQueuMutex );
+      
+      while (g_messageQueue.size() > 0)
+      {
+         cntrl.executeCommand(g_messageQueue[0]);
+         g_messageQueue.erase(g_messageQueue.begin());
+      }
+      /* 
+      string cmd = g_messageQueue
       int l = g_messageQueue.size();
       cout << "In main loop, queue has: " << l << " entries." << endl;
 
@@ -84,6 +82,7 @@ int main(int argc, char *argv[])
       {
          cout << "Message " << i << ": " << g_messageQueue[i] << endl;
       }
+      */
 
       pthread_mutex_unlock( &msgQueuMutex );
 
@@ -92,20 +91,6 @@ int main(int argc, char *argv[])
       gettimeofday(&tv, NULL); 
       usStartTime = tv.tv_sec * 1000000 + tv.tv_usec;
 */
-      // Run monitor step...
-      ts.sampleSensors();
-      rc.setRelays(light, !light);
-      log.creatLogEntry(
-         ts.getLatestTemperature(TempSensors::poolSensor), 
-         ts.getLatestTemperature(TempSensors::solarSensor),
-         light,
-         !light);
-
-      cout << "Current temperatures: Solar: " << ts.getLatestTemperature(TempSensors::solarSensor)
-         << ", Pool: " << ts.getLatestTemperature(TempSensors::poolSensor) << endl;
-         
-      light = !light;
-      //... until here
 
 /*      
       

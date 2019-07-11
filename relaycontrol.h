@@ -14,6 +14,7 @@ public:
 private:
    int m_relayControl[2];
    int m_ledControl[2];
+   bool m_pumpStates[2];
       
    
 public:
@@ -23,4 +24,6 @@ public:
    int initializeRelays();
    
    void setRelays(bool solar, bool filter);
+   void setRelay(RelayId relay, bool state);
+   bool getRelay(RelayId relay);
 };

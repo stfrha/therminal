@@ -141,8 +141,8 @@ void* Comms::stepThread(void* threadId)
    
    long tid;
    tid = (long)threadId;
-   
-   for (int i = 0; i < 5; i++)
+
+   while(true)
    {
       cout << "CLIENT: STEP" << endl;
       

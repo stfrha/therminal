@@ -19,6 +19,8 @@ RelayControl::RelayControl()
    m_relayControl[filterPump] = 5;
    m_ledControl[solarPump] = 2;
    m_ledControl[filterPump] = 3;
+   m_pumpStates[solarPump] = false;
+   m_pumpStates[filterPump] = false;
 }
 
 int RelayControl::initializeRelays()
@@ -29,14 +31,27 @@ int RelayControl::initializeRelays()
    pinMode(m_ledControl[filterPump], OUTPUT);
    //pinMode(m_relayControl[solarPump], OUTPUT);
    //pinMode(m_relayControl[filterPump], OUTPUT);
+   
+   setRelays(m_pumpStates[solarPump], m_pumpStates[filterPump]);
 }
 
 
 void RelayControl::setRelays(bool solar, bool filter)
 {
-   //digitalWrite(m_relayControl[solarPump], solar);
-   digitalWrite(m_ledControl[solarPump], solar);
-   //digitalWrite(m_relayControl[filterPump], filter);
-   digitalWrite(m_ledControl[filterPump], filter);
+   setRelay(solarPump, solar);
+   setRelay(filterPump, filter);
+}
+
+void RelayControl::setRelay(RelayId relay, bool state)
+{
+   //digitalWrite(m_relayControl[relay], state);
+   digitalWrite(m_ledControl[relay], state);
+   m_pumpStates[relay] = state;
+
+}
+
+bool RelayControl::getRelay(RelayId relay)
+{
+   return m_pumpStates[relay];
 }
 
