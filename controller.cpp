@@ -1,12 +1,22 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-
+#include <sstream>
+#include <iomanip>
 #include <time.h>
 
 #include "controller.h"
 
 using namespace std;
+
+
+// Latest status is on the form:
+// {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto}
+// Example: "06.2,33.9,on,off,auto"
+
+string g_latestStatus;
+
+
 
 Controller::Controller() :
    m_light(false),
@@ -34,13 +44,18 @@ S_ON  - Force Solar pump on, ignored in AUTO
 SOFF  - Force Solar pump off, ignored in AUTO
 F_ON  - Force Filter pump on, ignored in AUTO
 FOFF  - Force Filter pump off, ignored in AUTO
+SREQ  - Request status string
 
 */
 
 
 void Controller::executeCommand(std::string command)
 {
-   if (command == "STEP")
+   if (command == "SREQ")
+   {
+      // Send status;
+   }
+   else if (command == "STEP")
    {
       executeStep();
    }
@@ -113,6 +128,29 @@ void Controller::executeStep(void)
       << ", Pool: " << m_ts.getLatestTemperature(TempSensors::poolSensor)
       << ", Solar pump: " << m_rc.getRelay(RelayControl::solarPump)
       << ", Filter pump: " << m_rc.getRelay(RelayControl::filterPump) << endl;
-      
+     
+   ostringstream statStream;
+   
+   statStream << setprecision(3) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ",";
+   statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ",";
+   statStream << m_rc.getRelay(RelayControl::filterPump) << ",";
+   statStream << m_rc.getRelay(RelayControl::solarPump) << ",";
+
+   if (m_state == automatic)
+   {
+      statStream << "auto";
+   }
+   else
+   {
+      statStream << "manual";
+   }
+   
+   g_latestStatus = statStream.str();
+    
+// Latest status is on the form:
+// {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto}
+// Example: "06.2,33.9,on,off,auto"
+
+     
    //... until here
 }

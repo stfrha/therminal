@@ -38,6 +38,10 @@ extern vector<string> g_messageQueue;
 extern pthread_cond_t g_cv;
 extern pthread_mutex_t g_cvLock;
 
+// Status as exposed globally from Controller class
+extern string g_latestStatus;
+
+
 // Both threads needs to agree on port number, 
 // and both threads are static, i.e. make it global
 int g_portNum = 51717;
@@ -315,10 +319,23 @@ void* Comms::serverThread(void* threadId)
          }
          cout << "SERVER: Message received from new client: " << buffer << endl;
 
-         pthread_mutex_lock( &msgQueuMutex );
-         g_messageQueue.push_back(buffer);
-         pthread_mutex_unlock( &msgQueuMutex );
-         pthread_cond_signal(&g_cv);
+         // We do a check for SREQ here and build the response immediatly
+         if (!strcmp(buffer, "SREQ"))
+         {
+            n = write(newSockfd, g_latestStatus.c_str(), g_latestStatus.length());
+            if (n < 0) 
+            {
+               error("ERROR writing to socket");
+            }
+         }
+         else
+         {
+            pthread_mutex_lock( &msgQueuMutex );
+            g_messageQueue.push_back(buffer);
+            pthread_mutex_unlock( &msgQueuMutex );
+            pthread_cond_signal(&g_cv);
+         }            
+                  
 
          /*
          n = write(newSockfd,"I got your message",18);
@@ -368,12 +385,24 @@ void* Comms::serverThread(void* threadId)
 				{ 
                // Terminate receiver string after the number of bytes received.
                buffer[valread] = 0;
-               
-               pthread_mutex_lock( &msgQueuMutex );
-               g_messageQueue.push_back(buffer);
-               pthread_mutex_unlock( &msgQueuMutex );
-               pthread_cond_signal(&g_cv);
-               
+
+               // We do a check for SREQ here and build the response immediatly
+               if (!strcmp(buffer, "SREQ"))
+               {
+                  n = write(newSockfd, g_latestStatus.c_str(), g_latestStatus.length());
+                  if (n < 0) 
+                  {
+                     error("ERROR writing to socket");
+                  }
+               }
+               else
+               {
+                  pthread_mutex_lock( &msgQueuMutex );
+                  g_messageQueue.push_back(buffer);
+                  pthread_mutex_unlock( &msgQueuMutex );
+                  pthread_cond_signal(&g_cv);
+               }            
+                              
                /*
                
                cout << "SERVER: Message received from new client: " << buffer << endl;
