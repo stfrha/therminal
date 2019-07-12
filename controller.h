@@ -25,6 +25,7 @@ private:
 
        
    void executeStep(void);
+   void createStatusMessage(void);
        
          
 public:

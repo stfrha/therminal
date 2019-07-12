@@ -57,7 +57,7 @@ class Socket{
          if ($buf = trim($buf))  
          {
             break;
-         ]
+         }
       }
       return $buf;
    }

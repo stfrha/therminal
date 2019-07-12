@@ -6,8 +6,8 @@ include './socket.php';
 
 $RaspberryPiIP = "127.0.0.1"; // Change by your RaspberryPi/PC IP 
 
-// Read port number from file: /home/pi/multithreadsockets/socket_config.txt
-$myfile = fopen("/home/pi/multithreadsockets/socket_config.txt", "r") or die("Unable to open file!");
+// Read port number from file: /home/pi/therminal/socket_config.txt
+$myfile = fopen("/home/pi/therminal/socket_config.txt", "r") or die("Unable to open file!");
 $portString = fgets($myfile);
 fclose($myfile);
 
@@ -26,9 +26,11 @@ $soffMsg = "SOFF";
 $fonMsg = "F_ON";
 $foffMsg = "FOFF";
 $data = "";
-$operation = $_GET["op"];
 
-$command = "";
+if (isset($_GET["op"]))
+{
+
+$operation = $_GET["op"];
 
 if ($operation =="auto")
 {
@@ -55,9 +57,12 @@ else if ($operation =="foff")
    $command = $foffMsg;
 }
 
-if ($command != "")
-{
-   $connection->send_data($command); //Send command String
+$connection->send_data($command); //Send command String
+
+// We want the command to take effect before we query the 
+// status. Hence a short sleep here
+usleep(2000000);
+
 }
 
 $command = "SREQ";
@@ -84,17 +89,30 @@ $connection->close_socket(); //////////Close connection
 <html>
 <head>Therminal management page!</head>
 <body>
+<p>Port number: <?php echo $portString; ?></p>
 <p>Pool temperature: <?php echo $poolTemp; ?></p>
 <p>Solar temperature: <?php echo $solarTemp; ?></p>
 <p>Filter pump: <?php echo $filterPump; ?></p>
 <p>Solar pump: <?php echo $solarPump; ?></p>
 <p>State: <?php echo $state; ?></p>
-<td><a href="run.php?op=auto">Auto</a></td>
-<td><a href="run.php?op=manl">Manual</a></td>
-<td><a href="run.php?op=s_on">Solar Pump On</a></td>
-<td><a href="run.php?op=soff">Solar Pump Off</a></td>
-<td><a href="run.php?op=f_on">Filter Pump On</a></td>
-<td><a href="run.php?op=foff">Filter Pump Off</a></td>
+<table width="800" border="1">
+  <tr>
+    <td><a href="?op=auto">Auto</a></td>
+    <td><a href="?op=manl">Manual</a></td>
+    <td><a href="?op=s_on">Solar Pump On</a></td>
+    <td><a href="?op=soff">Solar Pump Off</a></td>
+    <td><a href="?op=f_on">Filter Pump On</a></td>
+    <td><a href="?op=foff">Filter Pump Off</a></td>
+    <td><a href="index.php">Refresh</a></td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+<p></p>
+
+
+
+
+
 
 </body>
 </html>

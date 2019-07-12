@@ -96,8 +96,6 @@ void* Comms::stepThread(void* threadId)
       error("ERROR opening socket");
    }
 
-   cout << "CLIENT: Socket opened." << endl;
-
    server = gethostbyname("localhost");
    
    if (server == NULL) 
@@ -117,39 +115,9 @@ void* Comms::stepThread(void* threadId)
    {
       error("ERROR connecting");
    }
-   cout << "CLIENT: Socket connected." << endl;
-
-   /*
-   strcpy(buffer, "STEP");
-   n = write(masterSockfd,buffer,strlen(buffer));
-   
-   if (n < 0) 
-   {
-      error("ERROR writing to socket");
-   }
-
-   cout << "CLIENT: Message sent." << endl;
-   */
-   /*
-   bzero(buffer,256);
-   n = read(masterSockfd,buffer,255);
-   
-   if (n < 0) 
-   {
-      error("ERROR reading from socket");
-   }
-
-   cout << "CLIENT: Answer received: " << buffer << endl;
-   
-   */   
-   
-   long tid;
-   tid = (long)threadId;
 
    while(true)
    {
-      cout << "CLIENT: STEP" << endl;
-      
       strcpy(buffer, "STEP");
 
       n = write(masterSockfd,buffer,strlen(buffer));
@@ -159,35 +127,54 @@ void* Comms::stepThread(void* threadId)
          error("ERROR writing to socket");
       }
 
-      cout << "CLIENT: Message sent." << endl;
-
-      /*
-      bzero(buffer,256);
-      n = read(masterSockfd,buffer,255);
-      
-      if (n < 0) 
-      {
-         error("ERROR reading from socket");
-      }
-
-      cout << "CLIENT: Answer received: " << buffer << endl;
-      
-      */
-      sleep(3);
+      sleep(12);
    }
 
    close(masterSockfd);
 
-   cout << "CLIENT: Socket closed." << endl;
-
-   
 }
 
+void Comms::handleMessage(int socketFd, char* buffer, int length)
+{
+   int n;
+   
+   // Check if the buffer contains broken messages
+   // it is assumed that all messages are four characters.
+   if ((length % 4) != 0)
+   {
+      // At least one broken message, discard the whole buffer
+      return;
+   }
+   
+   int numOfMessages = length / 4;
+   
+   string strBuffer = buffer;
+   
+   for (int i = 0; i < numOfMessages; i++)
+   {
+      string message = strBuffer.substr(i*4, 4);
+
+      // We do a check for SREQ here and build the response immediatly
+      if (message == "SREQ")
+      {
+         n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
+         if (n < 0) 
+         {
+            error("ERROR writing to socket");
+         }
+      }
+      else
+      {
+         pthread_mutex_lock( &msgQueuMutex );
+         g_messageQueue.push_back(message);
+         pthread_mutex_unlock( &msgQueuMutex );
+         pthread_cond_signal(&g_cv);
+      }            
+   }
+}
 
 void* Comms::serverThread(void* threadId)
 {
-   cout << "SERVER: Now trying to create sockets..." << endl;
-   
    int masterSockfd;
    int newSockfd;
    socklen_t clilen;
@@ -204,11 +191,6 @@ void* Comms::serverThread(void* threadId)
    int sd; 
 	int max_sd; 
 
-   //a message 
-	char message[40];
-
-   strcpy(message, "ECHO Daemon v1.0 \r\n");
-
    //initialise all clientSocket[] to 0 so not checked 
 	for (i = 0; i < max_clients; i++) 
 	{ 
@@ -223,7 +205,6 @@ void* Comms::serverThread(void* threadId)
    {
       error("ERROR opening socket");
    }  
-   cout << "SERVER: Socket openend." << endl;
    
    bzero((char *) &serv_addr, sizeof(serv_addr));
    g_portNum = 51717;
@@ -253,8 +234,6 @@ void* Comms::serverThread(void* threadId)
       sockectConfigFile.close();
    }
      
-   cout << "SERVER: Socket bound." << endl;
-   
    listen(masterSockfd,5);
    clilen = sizeof(cli_addr);
 
@@ -306,7 +285,6 @@ void* Comms::serverThread(void* threadId)
          {
             error("ERROR on accept");
          }
-         cout << "SERVER: Socket accepted." << endl;
    
 			//inform user of socket number - used in send and receive commands 
 			printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , newSockfd , inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
@@ -317,35 +295,9 @@ void* Comms::serverThread(void* threadId)
          {
             error("ERROR reading from socket");
          }
-         cout << "SERVER: Message received from new client: " << buffer << endl;
 
-         // We do a check for SREQ here and build the response immediatly
-         if (!strcmp(buffer, "SREQ"))
-         {
-            n = write(newSockfd, g_latestStatus.c_str(), g_latestStatus.length());
-            if (n < 0) 
-            {
-               error("ERROR writing to socket");
-            }
-         }
-         else
-         {
-            pthread_mutex_lock( &msgQueuMutex );
-            g_messageQueue.push_back(buffer);
-            pthread_mutex_unlock( &msgQueuMutex );
-            pthread_cond_signal(&g_cv);
-         }            
-                  
-
-         /*
-         n = write(newSockfd,"I got your message",18);
-         if (n < 0) 
-         {
-            error("ERROR writing to socket");
-         }
-         cout << "SERVER: Answer sent." << endl;
-			*/	
-            
+         handleMessage(newSockfd, buffer, n);
+         
 			//add new socket to array of sockets 
 			for (i = 0; i < max_clients; i++) 
 			{ 
@@ -353,7 +305,6 @@ void* Comms::serverThread(void* threadId)
 				if( clientSocket[i] == 0 ) 
 				{ 
 					clientSocket[i] = newSockfd; 
-					cout << "Adding to list of sockets as " << i << endl;
 					break; 
 				} 
 			} 
@@ -380,41 +331,14 @@ void* Comms::serverThread(void* threadId)
 					clientSocket[i] = 0; 
 				} 
 					
-				//Echo back the message that came in 
+				// Assess the message that came in 
 				else
 				{ 
                // Terminate receiver string after the number of bytes received.
                buffer[valread] = 0;
 
-               // We do a check for SREQ here and build the response immediatly
-               if (!strcmp(buffer, "SREQ"))
-               {
-                  n = write(newSockfd, g_latestStatus.c_str(), g_latestStatus.length());
-                  if (n < 0) 
-                  {
-                     error("ERROR writing to socket");
-                  }
-               }
-               else
-               {
-                  pthread_mutex_lock( &msgQueuMutex );
-                  g_messageQueue.push_back(buffer);
-                  pthread_mutex_unlock( &msgQueuMutex );
-                  pthread_cond_signal(&g_cv);
-               }            
-                              
-               /*
-               
-               cout << "SERVER: Message received from new client: " << buffer << endl;
-
-               n = write(sd,"I got your message",18);
-               if (n < 0) 
-               {
-                  error("ERROR writing to socket");
-               }
-               cout << "SERVER: Answer sent." << endl;
-               
-               */
+               handleMessage(sd, buffer, valread);
+                             
 				} 
 			} 
 		} 

@@ -29,8 +29,8 @@ int RelayControl::initializeRelays()
 
    pinMode(m_ledControl[solarPump], OUTPUT);
    pinMode(m_ledControl[filterPump], OUTPUT);
-   //pinMode(m_relayControl[solarPump], OUTPUT);
-   //pinMode(m_relayControl[filterPump], OUTPUT);
+   pinMode(m_relayControl[solarPump], OUTPUT);
+   pinMode(m_relayControl[filterPump], OUTPUT);
    
    setRelays(m_pumpStates[solarPump], m_pumpStates[filterPump]);
 }
@@ -44,7 +44,7 @@ void RelayControl::setRelays(bool solar, bool filter)
 
 void RelayControl::setRelay(RelayId relay, bool state)
 {
-   //digitalWrite(m_relayControl[relay], state);
+   digitalWrite(m_relayControl[relay], state);
    digitalWrite(m_ledControl[relay], state);
    m_pumpStates[relay] = state;
 
