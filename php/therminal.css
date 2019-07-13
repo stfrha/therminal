@@ -92,21 +92,21 @@
 }
 
 .disabled {
-  background-color: grey;
+  background-color: Grey;
   color: darkGrey;
 }
 
 .enabled {
   background-color: DodgerBlue;
-  color: black;
+  color: Black;
 }
 
 .selected {
-  border-color: darkBlue;
+  border-color: DarkBlue;
 }
 
 .notSelected {
-  border-color: white;
+  border-color: White;
 }
 
 

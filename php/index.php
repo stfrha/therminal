@@ -29,40 +29,40 @@ $data = "";
 
 if (isset($_GET["op"]))
 {
-
-$operation = $_GET["op"];
-
-if ($operation =="auto")
-{
-   $command = $autoMsg;
-}
-else if ($operation =="manl")
-{
-   $command = $manualMsg;
-}
-else if ($operation =="s_on")
-{
-   $command = $sonMsg;
-}
-else if ($operation =="soff")
-{
-   $command = $soffMsg;
-}
-else if ($operation =="f_on")
-{
-   $command = $fonMsg;
-}
-else if ($operation =="foff")
-{
-   $command = $foffMsg;
-}
-
-$connection->send_data($command); //Send command String
-
-// We want the command to take effect before we query the 
-// status. Hence a short sleep here
-usleep(2000000);
-
+	
+	$operation = $_GET["op"];
+	
+	if ($operation =="auto")
+	{
+	   $command = $autoMsg;
+	}
+	else if ($operation =="manl")
+	{
+	   $command = $manualMsg;
+	}
+	else if ($operation =="s_on")
+	{
+	   $command = $sonMsg;
+	}
+	else if ($operation =="soff")
+	{
+	   $command = $soffMsg;
+	}
+	else if ($operation =="f_on")
+	{
+	   $command = $fonMsg;
+	}
+	else if ($operation =="foff")
+	{
+	   $command = $foffMsg;
+	}
+	
+	$connection->send_data($command); //Send command String
+	
+	// We want the command to take effect before we query the 
+	// status. Hence a short sleep here
+	usleep(2000000);
+	
 }
 
 $command = "SREQ";
@@ -82,38 +82,66 @@ $filterPump = $statusArray[2];
 $solarPump = $statusArray[3];
 $state = $statusArray[4];
 
-$connection->close_socket(); //////////Close connection 
-///////////// DONE :)  ///////////////
+$connection->close_socket(); 
 
 ?>
 <html>
-<head>Therminal management page!</head>
-<body>
-<p>Port number: <?php echo $portString; ?></p>
-<p>Pool temperature: <?php echo $poolTemp; ?></p>
-<p>Solar temperature: <?php echo $solarTemp; ?></p>
-<p>Filter pump: <?php echo $filterPump; ?></p>
-<p>Solar pump: <?php echo $solarPump; ?></p>
-<p>State: <?php echo $state; ?></p>
-<table width="800" border="1">
-  <tr>
-    <td><a href="?op=auto">Auto</a></td>
-    <td><a href="?op=manl">Manual</a></td>
-    <td><a href="?op=s_on">Solar Pump On</a></td>
-    <td><a href="?op=soff">Solar Pump Off</a></td>
-    <td><a href="?op=f_on">Filter Pump On</a></td>
-    <td><a href="?op=foff">Filter Pump Off</a></td>
-    <td><a href="index.php">Refresh</a></td>
-  </tr>
-</table>
-<p>&nbsp;</p>
-<p></p>
+   <head>
+      <link rel="stylesheet" type="text/css" href="therminal.css" >
+   </head>
+   <body>
+<div class="poolTempSplit enabled selected">
+  <div class="centered">
+    <h2>Pool Temp: <?php echo $poolTemp; ?></h2>
+  </div>
+</div>
 
+<div class="solarTempSplit enabled selected">
+  <div class="centered">
+    <h2>Solar Temp: <?php echo $solarTemp; ?></h2>
+  </div>
+</div>
 
+<a href="?op=auto">  
+   <div class="topButtonSplit left enabled <?php if ($state == "manual") echo("notSelected"); else echo("selected"); ?>">
+     <div class="centered">
+       <h2>Auto</h2>
+     </div>
+   </div>
+</a>
 
+<a href="?op=manl"> 
+   <div class="topButtonSplit right enabled <?php if ($state == "auto") echo("notSelected"); else echo("selected"); ?>">
+     <div class="centered">
+       <h2>Manual</h2>
+     </div>
+   </div>
+</a>
 
+<a href="?op=<?php if ($filterPump == "1") echo "foff"; else echo "f_on";?>"> 
+   <div class="bottomButtonSplit left <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($filterPump == "0") echo("notSelected"); else echo("selected"); ?>">
+     <div class="centered">
+       <h2>Filter Pump: <?php echo $filterPump; ?></h2>
+     </div>
+   </div>
+</a>
 
+<a href="?op=<?php if ($solarPump == "1") echo "soff"; else echo "s_on";?>"> 
+   <div class="bottomButtonSplit right <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($solarPump == "0") echo("notSelected"); else echo("selected"); ?>">
+     <div class="centered">
+       <h2>Solar Pump: <?php echo $solarPump; ?></h2>
+     </div>
+   </div>
+</a>
 
+<a href="index.php"> 
+   <div class="refreshSplit enabled selected">
+      <div class="centered">
+         <h2>Refresh</h2>
+      </div>
+   </div>
+</a> 
 </body>
 </html>
+
 
