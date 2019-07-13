@@ -89,7 +89,7 @@ $connection->close_socket();
    <head>
       <link rel="stylesheet" type="text/css" href="therminal.css" >
    </head>
-   <body>
+   <body background="poolwater.jpg">
 <div class="poolTempSplit enabled selected">
   <div class="centered">
     <h2>Pool Temp: <?php echo $poolTemp; ?></h2>
