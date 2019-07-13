@@ -1,0 +1,136 @@
+/* Split the screen in half */
+
+.poolTempSplit {
+  height: 24%;
+  width: 94%;
+  position: fixed;
+  z-index: 1;
+  top: -1%;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-radius: 20px;
+  margin: 1%;
+  font-size: 40;
+  font-family: helvetica;
+  font-weight: bold;
+}
+
+.solarTempSplit {
+  height: 7%;
+  width: 94%;
+  position: fixed;
+  z-index: 1;
+  top: 28%;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-radius: 20px;
+  margin: 1%;
+  font-size: 18;
+  font-family: helvetica;
+}
+
+.topButtonSplit {
+  height: 14%;
+  width: 47%;
+  position: fixed;
+  z-index: 1;
+  top: 40%;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-radius: 20px;
+  margin: 1%;
+  font-size: 20;
+  font-family: helvetica;
+}
+
+.bottomButtonSplit {
+  height: 14%;
+  width: 47%;
+  position: fixed;
+  z-index: 1;
+  top: 60%;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-radius: 20px;
+  margin: 1%;
+  font-size: 20;
+  font-family: helvetica;
+}
+
+.refreshSplit {
+  height: 13%;
+  width: 94%;
+  margin: 1%;
+  position: fixed;
+  z-index: 1;
+  top: 80%;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border-style: solid;
+  border-width: 10px;
+  border-radius: 20px;
+  font-size: 20;
+  font-family: helvetica;
+}
+
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.disabled {
+  background-color: grey;
+  color: darkGrey;
+}
+
+.enabled {
+  background-color: DodgerBlue;
+  color: black;
+}
+
+.selected {
+  border-color: darkBlue;
+}
+
+.notSelected {
+  border-color: white;
+}
+
+
+/* Control the left side */
+.left {
+  left: 0;
+}
+
+/* Control the right side */
+.right {
+  right: 0;
+}
+
+/* If you want the content centered horizontally and vertically */
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+/* Style the image inside the centered container, if needed */
+.centered img {
+  width: 150px;
+  border-radius: 50%;
+} 
