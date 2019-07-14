@@ -44,8 +44,8 @@ void RelayControl::setRelays(bool solar, bool filter)
 
 void RelayControl::setRelay(RelayId relay, bool state)
 {
-   digitalWrite(m_relayControl[relay], state);
-   digitalWrite(m_ledControl[relay], state);
+   digitalWrite(m_relayControl[relay], !state);
+   digitalWrite(m_ledControl[relay], !state);
    m_pumpStates[relay] = state;
 
 }

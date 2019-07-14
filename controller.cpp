@@ -19,7 +19,6 @@ string g_latestStatus;
 
 
 Controller::Controller() :
-   m_light(false),
    m_state(automatic)
 {
    
@@ -62,14 +61,14 @@ void Controller::executeCommand(std::string command)
    else if (command == "AUTO")
    {
       m_state = automatic;
-      createStatusMessage();
+      generateStatusMessage(3);
 
       cout << "State is now automatic." << endl;
    }
    else if (command == "MANL")
    {
       m_state = manual;
-      createStatusMessage();
+      generateStatusMessage(3);
 
       cout << "State is now manual." << endl;
    }
@@ -78,7 +77,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, true);
-         createStatusMessage();
+         generateStatusMessage(3);
 
          cout << "Solar pump is on." << endl;
       }
@@ -88,7 +87,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, false);
-         createStatusMessage();
+         generateStatusMessage(3);
 
          cout << "Solar pump is off." << endl;
       }
@@ -98,7 +97,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, true);
-         createStatusMessage();
+         generateStatusMessage(3);
 
          cout << "Filter pump is on." << endl;
       }
@@ -108,7 +107,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, false);
-         createStatusMessage();
+         generateStatusMessage(3);
 
          cout << "Filter pump is off." << endl;
       }
@@ -119,15 +118,15 @@ void Controller::executeCommand(std::string command)
    }
 }
 
-void Controller::createStatusMessage(void)
+string Controller::generateStatusMessage(int precision)
 {
    // Latest status is on the form:
-   // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto}
-   // Example: "06.2,33.9,on,off,auto"
+   // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto},{date},{time}
+   // Example: "06.2,33.9,on,off,auto,2019-07-14,23:37:45"
 
    ostringstream statStream;
    
-   statStream << setprecision(3) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ",";
+   statStream << setprecision(precision) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ",";
    statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ",";
    statStream << m_rc.getRelay(RelayControl::filterPump) << ",";
    statStream << m_rc.getRelay(RelayControl::solarPump) << ",";
@@ -141,34 +140,32 @@ void Controller::createStatusMessage(void)
       statStream << "manual";
    }
    
-   g_latestStatus = statStream.str();
+   statStream << "," << m_log.getDate() << "," << m_log.getTime();
+   
+   return statStream.str();
+}
+
+void Controller::prepareStatusMessage(void)
+{
+   g_latestStatus = generateStatusMessage(3);
 }
 
 void Controller::executeStep(void)
 {
-   // Run monitor step...
    m_ts.sampleSensors();
    
    if (m_state == automatic)
    {
-      m_rc.setRelays(m_light, !m_light);
-      m_light = !m_light;
+      m_rc.setRelays(false, false);
    }
-   
-   m_log.creatLogEntry(
-      m_ts.getLatestTemperature(TempSensors::poolSensor), 
-      m_ts.getLatestTemperature(TempSensors::solarSensor),
-      m_rc.getRelay(RelayControl::solarPump),
-      m_rc.getRelay(RelayControl::filterPump));
+
+   // Generate one log entry to log file and one
+   // status message to send on socket
+   m_log.writeLogEntry(generateStatusMessage(5));
+   prepareStatusMessage();
 
    cout << "Current temperatures: Solar: " << m_ts.getLatestTemperature(TempSensors::solarSensor)
       << ", Pool: " << m_ts.getLatestTemperature(TempSensors::poolSensor)
       << ", Solar pump: " << m_rc.getRelay(RelayControl::solarPump)
       << ", Filter pump: " << m_rc.getRelay(RelayControl::filterPump) << endl;
-   
-
-   createStatusMessage();
-
-     
-   //... until here
 }

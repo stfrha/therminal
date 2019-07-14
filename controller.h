@@ -20,12 +20,12 @@ private:
    TempSensors m_ts;
    RelayControl m_rc;
    Logger m_log;
-   bool m_light;
    ControllerState m_state;
 
        
    void executeStep(void);
-   void createStatusMessage(void);
+   void prepareStatusMessage(void);
+   std::string generateStatusMessage(int precision);
        
          
 public:

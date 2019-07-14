@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-
+#include <fstream>
 #include <time.h>
 
 #include <wiringPi.h>
@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const string  Logger::c_logFileName = "therminal_log.xml"; 
+const string  Logger::c_logFileName = "therminal_log.txt"; 
 
 bool Logger::logFileExists(void)
 {
@@ -18,67 +18,41 @@ bool Logger::logFileExists(void)
     return f.good();
 }
 
-
-void Logger::readFile(void)
-{
-   m_tmpDoc = new pugi::xml_document;
-
-   pugi::xml_parse_result result = m_tmpDoc->load_file(c_logFileName.c_str());
-
-   m_tmpRootNode = m_tmpDoc->child("therminalLog");
-}
-
-void Logger::readSession(void)
-{
-   readFile();
-   
-   for (auto last_session = m_tmpRootNode.children("therminalSession").begin();
-      last_session != m_tmpRootNode.children("therminalSession").end();
-      ++last_session)
-   {
-      m_tmpSessionNode = (*last_session);
-   }
-
-//   m_tmpSessionNode = m_tmpRootNode.last_child("therminalSession");
-}
-
-void Logger::writeFile(void)
-{
-   m_tmpDoc->save_file(c_logFileName.c_str());
-   
-   delete m_tmpDoc;
-   m_tmpDoc = NULL;
-}
-
 void Logger::createLogFile(void)
 {
-   pugi::xml_document doc;
-
-   pugi::xml_node root = doc.append_child("therminalLog");
    
-   doc.save_file(c_logFileName.c_str());
+   // Latest status is on the form:
+   // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto},{date},{time}
+   // Example: "06.2,33.9,on,off,auto,2019-07-14,23:37:45"
+
+   std::ofstream outfile;
+
+   outfile.open(c_logFileName, std::ios_base::app);
+   outfile << "Pool Temperature,Solar Temperature,Filter Pump state,Solar Pump state,Working State,Date,Time" << endl; 
 }
 
-
-void Logger::createSessionEntry(void)
+std::string Logger::getDate(void)
 {
-   readFile();
-   
-   m_tmpSessionNode = m_tmpRootNode.append_child("therminalSession");
+   time_t now;
+   struct tm* timeInfo;
+   char buf[sizeof "2011-10-08e"];
 
-   pugi::xml_attribute dateTimeAttr = m_tmpSessionNode.append_attribute("dateTime");
-   
-   dateTimeAttr.set_value(getTime().c_str());
-
-   writeFile();
+   time(&now);
+   timeInfo = localtime(&now);
+   strftime(buf, sizeof buf, "%Y-%m-%d", timeInfo);
+   std::string nowStr = buf;
+   return nowStr;
 }
 
 std::string Logger::getTime(void)
 {
    time_t now;
+   struct tm* timeInfo;
+   char buf[sizeof "23:45:23e"];
+
    time(&now);
-   char buf[sizeof "2011-10-08T07:07:07Z"];
-   strftime(buf, sizeof buf, "%FT%TZ", gmtime(&now));
+   timeInfo = localtime(&now);
+   strftime(buf, sizeof buf, "%H:%M:%S", timeInfo);
    std::string nowStr = buf;
    return nowStr;
 }
@@ -95,32 +69,13 @@ void Logger::initializeLog(void)
    {
       createLogFile();
    }
-
-   createSessionEntry();
 }
 
-
-void Logger::creatLogEntry(float solarTemp, float poolTemp, bool solar, bool filter)
+void Logger::writeLogEntry(const std::string& status)
 {
-   readSession();
-   
-   pugi::xml_node entryNode = m_tmpSessionNode.append_child("logEntry");
+   std::ofstream outfile;
 
-   pugi::xml_attribute dateTimeAttr = entryNode.append_attribute("dateTime");
-   dateTimeAttr.set_value(getTime().c_str());
-
-   pugi::xml_attribute poolTempAttr = entryNode.append_attribute("poolTemp");
-   poolTempAttr.set_value(poolTemp);
-
-   pugi::xml_attribute solarTempAttr = entryNode.append_attribute("solarTemp");
-   solarTempAttr.set_value(solarTemp);
-
-   pugi::xml_attribute filterPumpAttr = entryNode.append_attribute("filterPump");
-   filterPumpAttr.set_value(filter);
-   
-   pugi::xml_attribute solarPumpAttr = entryNode.append_attribute("solarPump");
-   solarPumpAttr.set_value(solar);
-   
-   writeFile();
+   outfile.open(c_logFileName, std::ios_base::app);
+   outfile << status << endl; 
 }
 
