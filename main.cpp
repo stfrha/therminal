@@ -1,7 +1,5 @@
 
 // These are needed for some millisecond timing
-#include <chrono>
-#include <thread>
 #include <time.h>
 #include <sys/time.h>
 
