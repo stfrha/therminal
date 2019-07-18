@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <string>
 
 class Logger
@@ -19,3 +22,6 @@ public:
    std::string getDate(void);
    void writeLogEntry(const std::string& status);
 };
+
+#endif
+

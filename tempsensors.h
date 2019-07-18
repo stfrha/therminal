@@ -1,3 +1,7 @@
+#ifndef TEMPSENSORS_H
+#define TEMPSENSORS_H
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -32,3 +36,5 @@ public:
    void sampleSensors();
    float getLatestTemperature(TempSensorId id);
 };
+
+#endif

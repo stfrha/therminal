@@ -62,7 +62,7 @@ void Comms::initializeComms(Controller* cntrl)
    
    pthread_t threadId;
 
-   int result = pthread_create(&threadId, NULL, serverThread, NULL);
+   int result = pthread_create(&threadId, NULL, serverThread, (void*)cntrl);
    if (result)
    {
       cout << "Server Thread could not be created, " << result << endl;
@@ -70,7 +70,7 @@ void Comms::initializeComms(Controller* cntrl)
    }
 }
 
-void Comms::handleMessage(int socketFd, char* buffer, int length)
+void Comms::handleMessage(Controller* cntrl, int socketFd, char* buffer, int length)
 {
    int n;
    
@@ -93,7 +93,7 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
       // We do a check for SREQ here and build the response immediatly
       if (message != "SREQ")
       {
-         m_cntrl->executeCommand(message);
+         cntrl->executeCommand(message);
       }
 
       n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
@@ -104,8 +104,11 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
    }
 }
 
-void* Comms::serverThread(void* threadId)
+void* Comms::serverThread(void* cntrlPointer)
 {
+   Controller* cntrl = (Controller*) cntrlPointer;   
+
+   
    int masterSockfd;
    int newSockfd;
    socklen_t clilen;
@@ -227,7 +230,7 @@ void* Comms::serverThread(void* threadId)
             error("ERROR reading from socket");
          }
 
-         handleMessage(newSockfd, buffer, n);
+         handleMessage(cntrl, newSockfd, buffer, n);
          
 			//add new socket to array of sockets 
 			for (i = 0; i < max_clients; i++) 
@@ -268,7 +271,7 @@ void* Comms::serverThread(void* threadId)
                // Terminate receiver string after the number of bytes received.
                buffer[valread] = 0;
 
-               handleMessage(sd, buffer, valread);
+               handleMessage(cntrl, sd, buffer, valread);
                              
 				} 
 			} 

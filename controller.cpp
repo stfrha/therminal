@@ -38,7 +38,7 @@ void Controller::initializeController(void)
    
    pthread_t thread;
 
-   result = pthread_create(&thread, NULL, monitorThread, this);
+   int result = pthread_create(&thread, NULL, monitorThread, this);
    if (result)
    {
       cout << "Monitor thread could not be created, " << result << endl;

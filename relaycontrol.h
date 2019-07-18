@@ -1,3 +1,7 @@
+#ifndef RELAYCONTROL_H
+#define RELAYCONTROL_H
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -27,3 +31,6 @@ public:
    void setRelay(RelayId relay, bool state);
    bool getRelay(RelayId relay);
 };
+
+#endif
+
