@@ -53,6 +53,7 @@ void Controller::executeCommand(std::string command)
    if (command == "SREQ")
    {
       // Send status;
+      generateStatusMessage(3);
    }
    else if (command == "STEP")
    {
@@ -61,14 +62,14 @@ void Controller::executeCommand(std::string command)
    else if (command == "AUTO")
    {
       m_state = automatic;
-      generateStatusMessage(3);
+      g_latestStatus = generateStatusMessage(3);
 
       cout << "State is now automatic." << endl;
    }
    else if (command == "MANL")
    {
       m_state = manual;
-      generateStatusMessage(3);
+      g_latestStatus = generateStatusMessage(3);
 
       cout << "State is now manual." << endl;
    }
@@ -77,7 +78,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, true);
-         generateStatusMessage(3);
+         g_latestStatus = generateStatusMessage(3);
 
          cout << "Solar pump is on." << endl;
       }
@@ -87,7 +88,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, false);
-         generateStatusMessage(3);
+         g_latestStatus = generateStatusMessage(3);
 
          cout << "Solar pump is off." << endl;
       }
@@ -97,7 +98,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, true);
-         generateStatusMessage(3);
+         g_latestStatus = generateStatusMessage(3);
 
          cout << "Filter pump is on." << endl;
       }
@@ -107,7 +108,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, false);
-         generateStatusMessage(3);
+         g_latestStatus = generateStatusMessage(3);
 
          cout << "Filter pump is off." << endl;
       }
@@ -121,15 +122,15 @@ void Controller::executeCommand(std::string command)
 string Controller::generateStatusMessage(int precision)
 {
    // Latest status is on the form:
-   // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto},{date},{time}
-   // Example: "06.2,33.9,on,off,auto,2019-07-14,23:37:45"
+   // {pool temp: 06.5};{solar temp 33.9};{filter pump on/off};{solar pump on/off};{manual/auto};{date};{time}
+   // Example: "06.2;33.9;on;off;auto;2019-07-14;23:37:45"
 
    ostringstream statStream;
    
-   statStream << setprecision(precision) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ",";
-   statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ",";
-   statStream << m_rc.getRelay(RelayControl::filterPump) << ",";
-   statStream << m_rc.getRelay(RelayControl::solarPump) << ",";
+   statStream << setprecision(precision) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ";";
+   statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ";";
+   statStream << m_rc.getRelay(RelayControl::filterPump) << ";";
+   statStream << m_rc.getRelay(RelayControl::solarPump) << ";";
 
    if (m_state == automatic)
    {
@@ -140,7 +141,7 @@ string Controller::generateStatusMessage(int precision)
       statStream << "manual";
    }
    
-   statStream << "," << m_log.getDate() << "," << m_log.getTime();
+   statStream << ";" << m_log.getDate() << ";" << m_log.getTime();
    
    return statStream.str();
 }

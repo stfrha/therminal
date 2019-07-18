@@ -38,6 +38,13 @@ extern vector<string> g_messageQueue;
 extern pthread_cond_t g_cv;
 extern pthread_mutex_t g_cvLock;
 
+// Shows who owns execution, Comms or Main
+extern bool mainIsIt;
+
+// Conditional variable to signal command finished
+extern pthread_cond_t g_cvFinished;
+extern pthread_mutex_t g_cvFinishedLock;
+
 // Status as exposed globally from Controller class
 extern string g_latestStatus;
 
@@ -127,7 +134,7 @@ void* Comms::stepThread(void* threadId)
          error("ERROR writing to socket");
       }
 
-      sleep(12);
+      sleep(1200);
    }
 
    close(masterSockfd);
@@ -139,10 +146,12 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
    int n;
    
    // Check if the buffer contains broken messages
-   // it is assumed that all messages are four characters.
+   // (it is assumed that all messages are four characters.)
    if ((length % 4) != 0)
    {
       // At least one broken message, discard the whole buffer
+      cout << "COMMS: At least one broken message received. Length is: " << length << " and should be multiple of four." << endl;
+
       return;
    }
    
@@ -154,29 +163,81 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
    {
       string message = strBuffer.substr(i*4, 4);
 
-      // We do a check for SREQ here and build the response immediatly
-      if (message == "SREQ")
+      cout << "COMMS: Now handling message: " << message <<  endl;
+
+      // For SREQ only a current status update is
+      // is needed. Otherwise queue the command
+      // and signal main to execute it
+      if (message != "SREQ")
       {
+         cout << "COMMS: Waiting for CV mutex..." << endl;
+
+         int r = pthread_mutex_lock(&g_cvLock);
+         cout << "COMMS: CV mutex received, r = " << r << endl;
+         
+         
+         if (!mainIsIt)
+         {
+            cout << "COMMS: Adding new command: " << message << " to message queue." << endl;
+
+            pthread_mutex_lock( &msgQueuMutex );
+            g_messageQueue.push_back(message);
+            pthread_mutex_unlock( &msgQueuMutex );
+
+            // Before main gets command signal we acquire the finished
+            // mutex for when we want to wait for response
+            cout << "COMMS: Waiting for Finished CV mutex..." << endl;
+            int r = pthread_mutex_lock(&g_cvFinishedLock);
+            cout << "COMMS: CV Finished mutex received, r = " << r << endl;
+            
+            cout << "COMMS: Sending signal." << endl;
+
+            mainIsIt = true;
+            pthread_cond_signal(&g_cv);
+            pthread_mutex_unlock(&g_cvLock);
+
+            // The command is sent, now wait for main (and controller)
+            // to execute the command and update the status accordingly
+            // Wait for mutex to reopen 
+
+            pthread_cond_wait(&g_cvFinished, &g_cvFinishedLock);
+
+            // When Comms was signaled (after wait above)
+            // it was given the mutex. Now main needs it 
+            // to start its wait, so we unlock it here
+            pthread_mutex_unlock(&g_cvFinishedLock);
+
+            cout << "COOMS: Signal received and mutex released." << endl;
+         }
+      }
+
+      if (message == "STEP")
+      {
+         cout << "COMMS: Command response signal received but STEP command requires no response." << endl;
+      }
+      else
+      {
+         cout << "COMMS: Command response signal received, Sending status..." << endl;
+
+         // Send the status response
          n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
          if (n < 0) 
          {
             error("ERROR writing to socket");
          }
+
+         cout << "COMMS: Status " << g_latestStatus.c_str() << " sent." << endl;
       }
-      else
-      {
-         pthread_mutex_lock( &msgQueuMutex );
-         g_messageQueue.push_back(message);
-         pthread_mutex_unlock( &msgQueuMutex );
-         pthread_cond_signal(&g_cv);
-      }            
    }
 }
 
 void* Comms::serverThread(void* threadId)
 {
    int masterSockfd;
-   int newSockfd;
+   
+   // We use -1 as an indication that no socket has been attached yet.
+   // We assume that the first client to 
+   int newSockfd = -1;
    socklen_t clilen;
    char buffer[1024];
    struct sockaddr_in serv_addr;
@@ -287,7 +348,7 @@ void* Comms::serverThread(void* threadId)
          }
    
 			//inform user of socket number - used in send and receive commands 
-			printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , newSockfd , inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
+			printf("COMMS: New connection , socket fd is %d , ip is : %s , port : %d\n" , newSockfd , inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
 		
          bzero(buffer,256);
          n = read(newSockfd,buffer,255);
@@ -296,6 +357,7 @@ void* Comms::serverThread(void* threadId)
             error("ERROR reading from socket");
          }
 
+         cout << "COMMS: Read: " << buffer << " from NEW client: " << newSockfd << endl;
          handleMessage(newSockfd, buffer, n);
          
 			//add new socket to array of sockets 
@@ -323,7 +385,7 @@ void* Comms::serverThread(void* threadId)
 				{ 
 					//Somebody disconnected , get his details and print 
 					getpeername(sd , (struct sockaddr*)&cli_addr , &clilen); 
-					printf("Host disconnected , ip %s , port %d \n" , 
+					printf("COMMS: Host disconnected , ip %s , port %d \n" , 
 						inet_ntoa(cli_addr.sin_addr) , ntohs(cli_addr.sin_port)); 
 						
 					//Close the socket and mark as 0 in list for reuse 
@@ -334,6 +396,9 @@ void* Comms::serverThread(void* threadId)
 				// Assess the message that came in 
 				else
 				{ 
+               cout << "COMMS: Read: " << buffer << " from existing client: " << sd << endl;
+               handleMessage(newSockfd, buffer, n);
+
                // Terminate receiver string after the number of bytes received.
                buffer[valread] = 0;
 
