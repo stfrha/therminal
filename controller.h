@@ -26,6 +26,9 @@ private:
    void executeStep(void);
    void prepareStatusMessage(void);
    std::string generateStatusMessage(int precision);
+   
+   static void* monitorThread(void* threadId);
+
        
          
 public:

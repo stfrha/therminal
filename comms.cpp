@@ -56,8 +56,10 @@ Comms::Comms()
 {
 }
 
-void Comms::initializeComms(void)
+void Comms::initializeComms(Controller* cntrl)
 {
+   m_cntrl = cntrl;
+   
    pthread_t threadId;
 
    int result = pthread_create(&threadId, NULL, serverThread, NULL);
@@ -66,72 +68,6 @@ void Comms::initializeComms(void)
       cout << "Server Thread could not be created, " << result << endl;
       exit(1);
    }
-   
-   result = pthread_create(&threadId, NULL, stepThread, NULL);
-   if (result)
-   {
-      cout << "Step Thread could not be created, " << result << endl;
-      exit(1);
-   }
-  
-}
-
-void* Comms::stepThread(void* threadId)
-{
-   cout << "CLIENT: Waiting before connecting." << endl;
-   sleep(3);
-   
-   int masterSockfd, n;
-   struct sockaddr_in serv_addr;
-   struct hostent *server;
-
-	//set of socket descriptors 
-	fd_set readfds; 
-
-   char buffer[256];
-   
-   masterSockfd = socket(AF_INET, SOCK_STREAM, 0);
-   if (masterSockfd < 0) 
-   {
-      error("ERROR opening socket");
-   }
-
-   server = gethostbyname("localhost");
-   
-   if (server == NULL) 
-   {
-      fprintf(stderr,"ERROR, no such host\n");
-      exit(0);
-   }
-   
-   bzero((char *) &serv_addr, sizeof(serv_addr));
-   serv_addr.sin_family = AF_INET;
-   bcopy((char *)server->h_addr, 
-   (char *)&serv_addr.sin_addr.s_addr,
-   server->h_length);
-   serv_addr.sin_port = htons(g_portNum);
-
-   if (connect(masterSockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-   {
-      error("ERROR connecting");
-   }
-
-   while(true)
-   {
-      strcpy(buffer, "STEP");
-
-      n = write(masterSockfd,buffer,strlen(buffer));
-      
-      if (n < 0) 
-      {
-         error("ERROR writing to socket");
-      }
-
-      sleep(12);
-   }
-
-   close(masterSockfd);
-
 }
 
 void Comms::handleMessage(int socketFd, char* buffer, int length)
@@ -155,21 +91,16 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
       string message = strBuffer.substr(i*4, 4);
 
       // We do a check for SREQ here and build the response immediatly
-      if (message == "SREQ")
+      if (message != "SREQ")
       {
-         n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
-         if (n < 0) 
-         {
-            error("ERROR writing to socket");
-         }
+         m_cntrl->executeCommand(message);
       }
-      else
+
+      n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
+      if (n < 0) 
       {
-         pthread_mutex_lock( &msgQueuMutex );
-         g_messageQueue.push_back(message);
-         pthread_mutex_unlock( &msgQueuMutex );
-         pthread_cond_signal(&g_cv);
-      }            
+         error("ERROR writing to socket");
+      }
    }
 }
 

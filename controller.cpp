@@ -5,10 +5,14 @@
 #include <iomanip>
 #include <time.h>
 
+// For threads
+#include <pthread.h>
+
 #include "controller.h"
 
 using namespace std;
 
+pthread_mutex_t globalStatusMutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Latest status is on the form:
 // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto}
@@ -31,6 +35,27 @@ void Controller::initializeController(void)
    m_rc.initializeRelays();   
    m_ts.initializeTempSensors();
    m_log.initializeLog();
+   
+   pthread_t thread;
+
+   result = pthread_create(&thread, NULL, monitorThread, this);
+   if (result)
+   {
+      cout << "Monitor thread could not be created, " << result << endl;
+      exit(1);
+   }
+
+}
+
+void* Controller::monitorThread(void* cntrlPointer)
+{
+   Controller* instance = (Controller*) cntrlPointer;   
+   
+   while(true)
+   {
+      instance->executeStep();
+      sleep(12);
+   }
 }
 
 
@@ -48,27 +73,30 @@ SREQ  - Request status string
 */
 
 
+// The following method will be called by and executed in
+// another thread than the main
+// This method is the only place (after initialization)
+// where the m_state member and the relays are set. Therefore
+// there is no need to mutex protect them. 
+
 void Controller::executeCommand(std::string command)
 {
    if (command == "SREQ")
    {
       // Send status;
-   }
-   else if (command == "STEP")
-   {
-      executeStep();
+      prepareStatusMessage();
    }
    else if (command == "AUTO")
    {
       m_state = automatic;
-      generateStatusMessage(3);
+      prepareStatusMessage();
 
       cout << "State is now automatic." << endl;
    }
    else if (command == "MANL")
    {
       m_state = manual;
-      generateStatusMessage(3);
+      prepareStatusMessage();
 
       cout << "State is now manual." << endl;
    }
@@ -77,7 +105,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, true);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Solar pump is on." << endl;
       }
@@ -87,7 +115,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, false);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Solar pump is off." << endl;
       }
@@ -97,7 +125,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, true);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Filter pump is on." << endl;
       }
@@ -107,7 +135,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, false);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Filter pump is off." << endl;
       }
@@ -121,15 +149,15 @@ void Controller::executeCommand(std::string command)
 string Controller::generateStatusMessage(int precision)
 {
    // Latest status is on the form:
-   // {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto},{date},{time}
-   // Example: "06.2,33.9,on,off,auto,2019-07-14,23:37:45"
+   // {pool temp: 06.5};{solar temp 33.9};{filter pump on/off};{solar pump on/off};{manual/auto};{date};{time}
+   // Example: "06.2;33.9;on;off;auto;2019-07-14;23:37:45"
 
    ostringstream statStream;
    
-   statStream << setprecision(precision) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ",";
-   statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ",";
-   statStream << m_rc.getRelay(RelayControl::filterPump) << ",";
-   statStream << m_rc.getRelay(RelayControl::solarPump) << ",";
+   statStream << setprecision(precision) << m_ts.getLatestTemperature(TempSensors::poolSensor) << ";";
+   statStream << m_ts.getLatestTemperature(TempSensors::solarSensor) << ";";
+   statStream << m_rc.getRelay(RelayControl::filterPump) << ";";
+   statStream << m_rc.getRelay(RelayControl::solarPump) << ";";
 
    if (m_state == automatic)
    {
@@ -140,16 +168,26 @@ string Controller::generateStatusMessage(int precision)
       statStream << "manual";
    }
    
-   statStream << "," << m_log.getDate() << "," << m_log.getTime();
+   statStream << ";" << m_log.getDate() << ";" << m_log.getTime();
    
    return statStream.str();
 }
 
+
 void Controller::prepareStatusMessage(void)
 {
+   string stat = generateStatusMessage(3);
+
+   // This method is called from multiple threads
+   // The global status needs thus be protected
+   // by mutex.
+   pthread_mutex_lock(&globalStatusMutex);
    g_latestStatus = generateStatusMessage(3);
+   pthread_mutex_unlock(&globalStatusMutex);
 }
 
+// The following method will be called by and executed in
+// another thread than the main
 void Controller::executeStep(void)
 {
    m_ts.sampleSensors();

@@ -1,7 +1,11 @@
+#include "controller.h"
 
 class Comms
 {
 private:
+   Controller* m_cntrl;
+
+
    static void* stepThread(void* threadId);
    static void* serverThread(void* threadId);
    static void handleMessage(int socketFd, char* buffer, int length);
@@ -9,7 +13,7 @@ private:
 public:   
    Comms();
    
-   void initializeComms(void);
+   void initializeComms(Controller* cntrl);
    
    // Should probably have a destructor that stops all sockets
    
