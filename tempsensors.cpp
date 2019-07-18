@@ -88,22 +88,13 @@ float TempSensors::sampleSensor(const string&  sensorPath )
    // Read the file
    if(read(fd,buf,sizeof(buf)) < 0)
    {
-<<<<<<< HEAD
-      cout << "read temperature sensor error" << endl;
-
-      close(fd);
-
-=======
       cout << "read temperature sensor file error" << endl;
       
       close(fd);
       
->>>>>>> c765da0cceab8b6a299b3cf3b9235119f1ba23f7
       return false;
    }
 
-   close(fd);
-   
    close(fd);
    
    // Returns the first index of 't'.
