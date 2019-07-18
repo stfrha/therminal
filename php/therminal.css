@@ -92,9 +92,9 @@
 }
 
 .disabled {
-  background-color: Grey;
-  color: darkGrey;
-  opacity: 0.5;
+  background-color: RoyalBlue;
+  color: DimGray;
+  opacity: 0.75;
 }
 
 .enabled {
@@ -104,11 +104,11 @@
 }
 
 .selected {
-  border-color: DarkBlue;
+  border-color: Aqua;
 }
 
 .notSelected {
-  border-color: White;
+  border-color: DarkBlue;
 }
 
 
