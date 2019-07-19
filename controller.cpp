@@ -23,7 +23,14 @@ string g_latestStatus;
 
 
 Controller::Controller() :
-   m_state(automatic)
+   m_state(automatic),
+   m_stepsSinceChange(0),
+   m_solarState(start),
+   c_minStepsSinceChange(12),
+   c_tempDiffToStartSolarPump(15.0f),
+   c_tempDiffToStopSolarPump(1.0f),
+   c_timeToStartFilter(8), 
+   c_timeToStopFilter(19)
 {
    
 }
@@ -194,7 +201,91 @@ void Controller::executeStep(void)
    
    if (m_state == automatic)
    {
-      m_rc.setRelays(false, false);
+      // Control for filter pump
+      time_t now;
+      struct tm* timeInfo;
+      time(&now);
+      timeInfo = localtime(&now);
+      
+      if ((timeInfo->tm_hour < c_timeToStartFilter) || (timeInfo->tm_hour > c_timeToStopFilter))
+      {
+         m_rc.setRelay(RelayControl::filterPump, false);
+      }
+      else
+      {
+         m_rc.setRelay(RelayControl::filterPump, true);
+      }
+
+      // Control for solar pump
+      
+      float tempDiff = 
+         m_ts.getLatestTemperature(TempSensors::solarSensor) - 
+         m_ts.getLatestTemperature(TempSensors::poolSensor);
+
+      if (tempDiff < 0.0f)
+      {
+         m_solarState = night;
+      }
+      
+      switch (m_solarState)
+      {
+      case night: 
+         m_rc.setRelay(RelayControl::solarPump, false);
+         if (tempDiff > 2.0f)
+         {
+            m_stepsSinceChange = 0;
+            m_solarState = start;
+         }
+         break;
+
+      case start: 
+         m_rc.setRelay(RelayControl::solarPump, true);
+         if (m_stepsSinceChange > 36)
+         {
+            m_stepsSinceChange = 0;
+            m_solarState = running;
+         }
+         break;
+
+      case running: 
+         m_rc.setRelay(RelayControl::solarPump, true);
+         if (tempDiff < 1.0f)
+         {
+            m_stepsSinceChange = 0;
+            m_solarState = heating;
+         }
+         break;
+            
+      case heating: 
+         m_rc.setRelay(RelayControl::solarPump, false);
+         if (m_stepsSinceChange > 720)
+         {
+            if (tempDiff > 2.0f)
+            {
+               m_stepsSinceChange = 0;
+               m_solarState = running;
+            }
+         }
+         if (tempDiff > 15.0f)
+         {
+            m_stepsSinceChange = 0;
+            m_solarState = purging;
+         }
+
+         break;
+
+      case purging: 
+         m_rc.setRelay(RelayControl::solarPump, true);
+         if (tempDiff < 2.0f)
+         {
+            m_stepsSinceChange = 0;
+            m_solarState = running;
+         }
+         break;
+         
+      }
+        
+      m_stepsSinceChange++;
    }
 
    // Generate one log entry to log file and one

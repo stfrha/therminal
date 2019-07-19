@@ -107,20 +107,20 @@ $connection->close_socket();
       <link rel="stylesheet" type="text/css" href="therminal.css" >
    </head>
    <body background="poolwater.jpg">
-      <div class="poolTempSplit enabled notSelected">
+      <div class="divBase poolTempSplit enabled notSelected">
         <div class="centered">
           <h2>Pool Temp: <?php echo $poolTemp; ?></h2>
         </div>
       </div>
 
-      <div class="solarTempSplit enabled notSelected">
+      <div class="divBase solarTempSplit enabled notSelected">
         <div class="centered">
           <h2>Solar Temp: <?php echo $solarTemp; ?></h2>
         </div>
       </div>
 
       <a href="?op=auto">  
-         <div class="topButtonSplit left enabled <?php if ($state == "manual") echo("notSelected"); else echo("selected"); ?>">
+         <div class="divBase topButtonSplit left enabled <?php if ($state == "manual") echo("notSelected"); else echo("selected"); ?>">
            <div class="centered">
              <h2>Auto</h2>
            </div>
@@ -128,7 +128,7 @@ $connection->close_socket();
       </a>
 
       <a href="?op=manl"> 
-         <div class="topButtonSplit right enabled <?php if ($state == "auto") echo("notSelected"); else echo("selected"); ?>">
+         <div class="divBase topButtonSplit right enabled <?php if ($state == "auto") echo("notSelected"); else echo("selected"); ?>">
            <div class="centered">
              <h2>Manual</h2>
            </div>
@@ -136,7 +136,7 @@ $connection->close_socket();
       </a>
 
       <a href="?op=<?php if ($filterPump == "1") echo "foff"; else echo "f_on";?>"> 
-         <div class="bottomButtonSplit left <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($filterPump == "0") echo("notSelected"); else echo("selected"); ?>">
+         <div class="divBase bottomButtonSplit left <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($filterPump == "0") echo("notSelected"); else echo("selected"); ?>">
            <div class="centered">
              <h2>Filter Pump: <?php echo $filterPump; ?></h2>
            </div>
@@ -144,7 +144,7 @@ $connection->close_socket();
       </a>
 
       <a href="?op=<?php if ($solarPump == "1") echo "soff"; else echo "s_on";?>"> 
-         <div class="bottomButtonSplit right <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($solarPump == "0") echo("notSelected"); else echo("selected"); ?>">
+         <div class="divBase bottomButtonSplit right <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($solarPump == "0") echo("notSelected"); else echo("selected"); ?>">
            <div class="centered">
              <h2>Solar Pump: <?php echo $solarPump; ?></h2>
            </div>
@@ -152,12 +152,21 @@ $connection->close_socket();
       </a>
 
       <a href="index.php"> 
-         <div class="refreshSplit enabled notSelected">
+         <div class="divBase refreshSplit enabled notSelected">
             <div class="centered">
                <h2>Refresh</h2>
             </div>
          </div>
       </a> 
+
+      <a href="therminal_chart.php"> 
+         <div class="divBase chartSplit enabled notSelected">
+            <div class="centered">
+               <h2>Chart</h2>
+            </div>
+         </div>
+      </a> 
+
    </body>
 </html>
 

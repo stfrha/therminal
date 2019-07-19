@@ -1,95 +1,3 @@
-/* Split the screen in half */
-
-.poolTempSplit {
-  height: 15%;
-  width: 75%;
-  position: fixed;
-  z-index: 1;
-  top: 4%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  border-style: solid;
-  border-width: 10px;
-  border-radius: 20px;
-  margin: 1%;
-  font-size: 40;
-  font-family: helvetica;
-  font-weight: bold;
-}
-
-.solarTempSplit {
-  height: 7%;
-  width: 75%;
-  position: fixed;
-  z-index: 1;
-  top: 28%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  border-style: solid;
-  border-width: 10px;
-  border-radius: 20px;
-  margin: 1%;
-  font-size: 18;
-  font-family: helvetica;
-}
-
-.topButtonSplit {
-  height: 14%;
-  width: 30%;
-  position: fixed;
-  z-index: 1;
-  top: 40%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  border-style: solid;
-  border-width: 10px;
-  border-radius: 20px;
-  margin: 1%;
-  font-size: 20;
-  font-family: helvetica;
-}
-
-.bottomButtonSplit {
-  height: 14%;
-  width: 30%;
-  position: fixed;
-  z-index: 1;
-  top: 60%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  border-style: solid;
-  border-width: 10px;
-  border-radius: 20px;
-  margin: 1%;
-  font-size: 20;
-  font-family: helvetica;
-}
-
-.refreshSplit {
-  height: 13%;
-  width: 94%;
-  margin: 1%;
-  position: fixed;
-  z-index: 1;
-  top: 80%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  border-style: solid;
-  border-width: 10px;
-  border-radius: 20px;
-  font-size: 20;
-  font-family: helvetica;
-}
-
-.split {
-  height: 100%;
-  width: 50%;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  overflow-x: hidden;
-  padding-top: 20px;
-}
 
 .disabled {
   background-color: RoyalBlue;
@@ -114,25 +22,104 @@
 
 /* Control the left side */
 .left {
-  left: 0;
+  left: 4vw;
 }
 
 /* Control the right side */
 .right {
-  right: 0;
+  right: 4vw;
 }
 
 /* If you want the content centered horizontally and vertically */
 .centered {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   text-align: center;
 }
 
-/* Style the image inside the centered container, if needed */
-.centered img {
-  width: 150px;
-  border-radius: 50%;
-} 
+
+.divBase {
+  box-sizing: content-box;
+  position: fixed;
+  z-index: 1;
+  overflow-x: hidden;
+  border-style: solid;
+  border-width: 2vMin;
+  border-radius: 3vMin;
+  font-family: helvetica;
+  font-weight: bold;
+}
+
+
+.poolTempSplit {
+  height: 20vh;
+  width: 90vw;
+  top: 2vh;
+  left: 4vw; 
+  font-size: 4.7vMin;
+}
+
+.solarTempSplit {
+  height: 10vh;
+  width: 90vw;
+  top: 27vh;
+  left: 4vw; 
+  font-size: 2.35vMin;
+}
+
+.topButtonSplit {
+  height: 15vh;
+  width: 40vw;
+  top: 42vh;
+  font-size: 3vMin;
+}
+
+.bottomButtonSplit {
+  height: 15vh;
+  width: 40vw;
+  top: 62vh;
+  font-size: 3vMin;
+}
+
+.refreshSplit {
+  height: 10vh;
+  width: 66vw;
+  top: 82vh;
+  left: 4vw; 
+  font-size: 2.35vMin;
+}
+
+.chartSplit {
+  height: 10vh;
+  width: 20vw;
+  top: 82vh;
+  right: 4vw; 
+  font-size: 2.35vMin;
+}
+
+.chartButtons {
+  height: 10vh;
+  width: 14vw;
+  top: 82vh;
+  font-size: 2.35vMin;
+}
+
+.chartButton1 {
+  left: 4vw; 
+}
+
+.chartButton2 {
+  left: 23vw; 
+}
+
+.chartButton3 {
+  left: 42vw; 
+}
+
+.chartButton4 {
+  left: 61vw; 
+}
+
+.chartButton5 {
+  left: 80vw; 
+}
+
+
