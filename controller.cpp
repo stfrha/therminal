@@ -249,7 +249,7 @@ void Controller::executeStep(void)
 
       case running: 
          m_rc.setRelay(RelayControl::solarPump, true);
-         if (tempDiff < 1.0f)
+         if (tempDiff < 0.5f)
          {
             m_stepsSinceChange = 0;
             m_solarState = heating;
@@ -266,7 +266,7 @@ void Controller::executeStep(void)
                m_solarState = running;
             }
          }
-         if (tempDiff > 15.0f)
+         if (tempDiff > 7.0f)
          {
             m_stepsSinceChange = 0;
             m_solarState = purging;

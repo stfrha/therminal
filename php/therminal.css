@@ -50,17 +50,17 @@
 
 
 .poolTempSplit {
-  height: 20vh;
+  height: 18vh;
   width: 90vw;
   top: 2vh;
   left: 4vw; 
-  font-size: 4.7vMin;
+  font-size: 4vMin;
 }
 
 .solarTempSplit {
   height: 10vh;
   width: 90vw;
-  top: 27vh;
+  top: 25vh;
   left: 4vw; 
   font-size: 2.35vMin;
 }
@@ -68,38 +68,38 @@
 .topButtonSplit {
   height: 15vh;
   width: 40vw;
-  top: 42vh;
+  top: 40vh;
   font-size: 3vMin;
 }
 
 .bottomButtonSplit {
   height: 15vh;
   width: 40vw;
-  top: 62vh;
+  top: 60vh;
   font-size: 3vMin;
 }
 
 .refreshSplit {
-  height: 10vh;
-  width: 66vw;
-  top: 82vh;
+  height: 8vh;
+  width: 40vw;
+  top: 80vh;
   left: 4vw; 
-  font-size: 2.35vMin;
+  font-size: 2vMin;
 }
 
 .chartSplit {
-  height: 10vh;
-  width: 20vw;
-  top: 82vh;
+  height: 8vh;
+  width: 40vw;
+  top: 80vh;
   right: 4vw; 
-  font-size: 2.35vMin;
+  font-size: 2vMin;
 }
 
 .chartButtons {
-  height: 10vh;
+  height: 7vh;
   width: 14vw;
-  top: 82vh;
-  font-size: 2.35vMin;
+  top: 80vh;
+  font-size: 1.5vMin;
 }
 
 .chartButton1 {

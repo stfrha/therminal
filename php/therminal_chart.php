@@ -178,19 +178,19 @@ for ($i = 0; $i <= $lastIndex; $i++)
           hAxis: { format: '<?php 
    if ($range == "eightHours")
    {
-       echo("h:m:s");
+       echo("HH:mm");
    }
    else if ($range == "day")
    {
-       echo("h:m");
+       echo("HH:mm");
    }
    else if ($range == "week")
    {
-       echo("yy-M-d");
+       echo("yy-MM-d");
    }
    else if ($range == "month")
    {
-       echo("yy-M-d");
+       echo("yy-MM-d");
    }
 ?>' },
 	  chartArea: {width: '75%', height: '80%'}
@@ -198,6 +198,9 @@ for ($i = 0; $i <= $lastIndex; $i++)
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('temperature_chart'));
+
+        var formatter = new google.visualization.DateFormat({pattern: 'yy-MM-d HH:mm'});
+        formatter.format(data, 0);
 
         chart.draw(data, options);
       }
@@ -238,25 +241,27 @@ for ($i = 0; $i <= $lastIndex; $i++)
           hAxis: { format: '<?php 
    if ($range == "eightHours")
    {
-       echo("h:m:s");
+       echo("HH:mm");
    }
    else if ($range == "day")
    {
-       echo("h:m");
+       echo("HH:mm");
    }
    else if ($range == "week")
    {
-       echo("yy-M-d");
+       echo("yy-MM-d");
    }
    else if ($range == "month")
    {
-       echo("yy-M-d");
+       echo("yy-MM-d");
    }
 ?>' },
           chartArea: {width: '75%', height: '50%'}
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('function_chart'));
+        var formatter = new google.visualization.DateFormat({pattern: 'yy-MM-d HH:mm'});
+        formatter.format(data, 0);
 
         chart.draw(data, options);
       }
