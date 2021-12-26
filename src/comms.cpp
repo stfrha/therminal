@@ -85,9 +85,6 @@ void* Comms::stepThread(void* threadId)
    struct sockaddr_in serv_addr;
    struct hostent *server;
 
-	//set of socket descriptors 
-	fd_set readfds; 
-
    char buffer[256];
    
    masterSockfd = socket(AF_INET, SOCK_STREAM, 0);

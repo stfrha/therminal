@@ -33,6 +33,8 @@ int RelayControl::initializeRelays()
    pinMode(m_relayControl[filterPump], OUTPUT);
    
    setRelays(m_pumpStates[solarPump], m_pumpStates[filterPump]);
+   
+   return 0;
 }
 
 

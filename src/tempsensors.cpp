@@ -28,7 +28,7 @@ bool TempSensors::readXmlFile(void)
 {
    pugi::xml_document doc;
 
-   pugi::xml_parse_result result = doc.load_file(c_configFileName.c_str());
+   doc.load_file(c_configFileName.c_str());
 
    pugi::xml_node root = doc.child("tempSensorConfig");
    
@@ -111,13 +111,10 @@ float TempSensors::sampleSensor(const string&  sensorPath )
 bool TempSensors::configurationSequence(void)
 {
    char path[50] = "/sys/bus/w1/devices/";
-   char rom[20];
    string localSensorPaths[2];
    int sensorIndex = 0;
    DIR *dirp;
    struct dirent *direntp;
-
-   
    
    cout << "Running configuration sequence!" << endl;
    cout << "===============================" << endl;
