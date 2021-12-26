@@ -9,7 +9,7 @@
 
 #include <time.h>
 
-#include "../pugixml/src/pugixml.hpp"
+#include "../../pugixml/src/pugixml.hpp"
 
 #include "tempsensors.h"
 
