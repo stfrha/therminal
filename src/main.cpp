@@ -65,22 +65,21 @@ int main(int argc, char *argv[])
       pthread_mutex_unlock(&g_cvLock);
       
       pthread_mutex_lock( &msgQueuMutex );
+
       
       while (g_messageQueue.size() > 0)
       {
+         int l = g_messageQueue.size();
+         cout << "In main loop, queue has: " << l << " entries." << endl;
+
+         for (int i = 0; i < l; i++)
+         {
+            cout << "Message " << i << ": " << g_messageQueue[i] << endl;
+         }
+
          cntrl.executeCommand(g_messageQueue[0]);
          g_messageQueue.erase(g_messageQueue.begin());
       }
-      /* 
-      string cmd = g_messageQueue
-      int l = g_messageQueue.size();
-      cout << "In main loop, queue has: " << l << " entries." << endl;
-
-      for (int i = 0; i < l; i++)
-      {
-         cout << "Message " << i << ": " << g_messageQueue[i] << endl;
-      }
-      */
 
       pthread_mutex_unlock( &msgQueuMutex );
 

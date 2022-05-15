@@ -1,4 +1,5 @@
 <?php
+
 ini_set("display_errors",1);
 error_reporting(E_ALL);
 
@@ -7,12 +8,12 @@ include './socket.php';
 $RaspberryPiIP = "127.0.0.1"; // Change by your RaspberryPi/PC IP 
 
 // Read port number from file: /home/pi/therminal/socket_config.txt
-$myfile = fopen("/home/pi/therminal/socket_config.txt", "r") or die("Unable to open file!");
+$myfile = fopen("/home/pi/git/therminal/bin/socket_config.txt", "r") or die("Unable to open file!");
 $portString = fgets($myfile);
 fclose($myfile);
 
 $RaspberryPiPORT = (int)$portString; // Change by your RaspberryPi / PC Port Number ..
-$connection = new Socket($RaspberryPiIP,$RaspberryPiPORT); // Create a new socet Connection object. 
+$connection = new Socket($RaspberryPiIP,$RaspberryPiPORT); // Create a new socket object. 
 $connection->init();
 
 $connection->open_socket(); // Connect PHP to RaspberryPi or computer.
@@ -56,14 +57,14 @@ if (isset($_GET["op"]))
 	{
 	   $command = $foffMsg;
 	}
-	
+
 	$connection->send_data($command); //Send command String
 	
 	// We want the command to take effect before we query the 
 	// status. Hence a short sleep here
-	usleep(2000000);
-	
+	usleep(250000);
 }
+
 
 $command = "SREQ";
 
@@ -72,8 +73,8 @@ $connection->send_data($command); //Send command String
 $therminalStatus = $connection->read_data();
 
 // Latest status is on the form:
-// {pool temp: 06.5},{solar temp 33.9},{filter pump on/off},{solar pump on/off},{manual/auto}
-// Example: "06.2,33.9,on,off,auto"
+// {pool temp: 06.5};{solar temp 33.9};{filter pump on/off};{solar pump on/off};{manual/auto};{date};{time}
+// Example: "06.2;33.9;on;off;auto;2019-07-14;23:37:45"
 
 $statusArray = explode(",", $therminalStatus);
 $poolTemp = $statusArray[0];
@@ -85,63 +86,73 @@ $state = $statusArray[4];
 $connection->close_socket(); 
 
 ?>
+
 <html>
    <head>
       <link rel="stylesheet" type="text/css" href="therminal.css" >
    </head>
    <body background="poolwater.jpg">
-<div class="poolTempSplit enabled selected">
-  <div class="centered">
-    <h2>Pool Temp: <?php echo $poolTemp; ?></h2>
-  </div>
-</div>
-
-<div class="solarTempSplit enabled selected">
-  <div class="centered">
-    <h2>Solar Temp: <?php echo $solarTemp; ?></h2>
-  </div>
-</div>
-
-<a href="?op=auto">  
-   <div class="topButtonSplit left enabled <?php if ($state == "manual") echo("notSelected"); else echo("selected"); ?>">
-     <div class="centered">
-       <h2>Auto</h2>
-     </div>
-   </div>
-</a>
-
-<a href="?op=manl"> 
-   <div class="topButtonSplit right enabled <?php if ($state == "auto") echo("notSelected"); else echo("selected"); ?>">
-     <div class="centered">
-       <h2>Manual</h2>
-     </div>
-   </div>
-</a>
-
-<a href="?op=<?php if ($filterPump == "1") echo "foff"; else echo "f_on";?>"> 
-   <div class="bottomButtonSplit left <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($filterPump == "0") echo("notSelected"); else echo("selected"); ?>">
-     <div class="centered">
-       <h2>Filter Pump: <?php echo $filterPump; ?></h2>
-     </div>
-   </div>
-</a>
-
-<a href="?op=<?php if ($solarPump == "1") echo "soff"; else echo "s_on";?>"> 
-   <div class="bottomButtonSplit right <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($solarPump == "0") echo("notSelected"); else echo("selected"); ?>">
-     <div class="centered">
-       <h2>Solar Pump: <?php echo $solarPump; ?></h2>
-     </div>
-   </div>
-</a>
-
-<a href="index.php"> 
-   <div class="refreshSplit enabled selected">
-      <div class="centered">
-         <h2>Refresh</h2>
+      <div class="divBase poolTempSplit enabled notSelected">
+        <div class="centered">
+          <h2>Pool Temp: <?php echo $poolTemp; ?></h2>
+        </div>
       </div>
-   </div>
-</a> 
-</body>
+
+      <div class="divBase solarTempSplit enabled notSelected">
+        <div class="centered">
+          <h2>Solar Temp: <?php echo $solarTemp; ?></h2>
+        </div>
+      </div>
+
+      <a href="?op=auto">  
+         <div class="divBase topButtonSplit left enabled <?php if ($state == "manual") echo("notSelected"); else echo("selected"); ?>">
+           <div class="centered">
+             <h2>Auto</h2>
+           </div>
+         </div>
+      </a>
+
+      <a href="?op=manl"> 
+         <div class="divBase topButtonSplit right enabled <?php if ($state == "auto") echo("notSelected"); else echo("selected"); ?>">
+           <div class="centered">
+             <h2>Manual</h2>
+           </div>
+         </div>
+      </a>
+
+      <a href="?op=<?php if ($filterPump == "1") echo "foff"; else echo "f_on";?>"> 
+         <div class="divBase bottomButtonSplit left <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($filterPump == "0") echo("notSelected"); else echo("selected"); ?>">
+           <div class="centered">
+             <h2>Filter Pump: <?php echo $filterPump; ?></h2>
+           </div>
+         </div>
+      </a>
+
+      <a href="?op=<?php if ($solarPump == "1") echo "soff"; else echo "s_on";?>"> 
+         <div class="divBase bottomButtonSplit right <?php if ($state == "manual") echo("enabled"); else echo("disabled");?> <?php if ($solarPump == "0") echo("notSelected"); else echo("selected"); ?>">
+           <div class="centered">
+             <h2>Solar Pump: <?php echo $solarPump; ?></h2>
+           </div>
+         </div>
+      </a>
+
+      <a href="index.php"> 
+         <div class="divBase refreshSplit enabled notSelected">
+            <div class="centered">
+               <h2>Refresh</h2>
+            </div>
+         </div>
+      </a> 
+
+      <a href="therminal_chart.php"> 
+         <div class="divBase chartSplit enabled notSelected">
+            <div class="centered">
+               <h2>Chart</h2>
+            </div>
+         </div>
+      </a> 
+
+   </body>
 </html>
 
 

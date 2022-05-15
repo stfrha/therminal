@@ -53,6 +53,7 @@ void Controller::executeCommand(std::string command)
    if (command == "SREQ")
    {
       // Send status;
+      cout << "Received status request command." << endl;
    }
    else if (command == "STEP")
    {
@@ -61,14 +62,14 @@ void Controller::executeCommand(std::string command)
    else if (command == "AUTO")
    {
       m_state = automatic;
-      generateStatusMessage(3);
+      prepareStatusMessage();
 
       cout << "State is now automatic." << endl;
    }
    else if (command == "MANL")
    {
       m_state = manual;
-      generateStatusMessage(3);
+      prepareStatusMessage();
 
       cout << "State is now manual." << endl;
    }
@@ -77,7 +78,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, true);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Solar pump is on." << endl;
       }
@@ -87,7 +88,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::solarPump, false);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Solar pump is off." << endl;
       }
@@ -97,7 +98,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, true);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Filter pump is on." << endl;
       }
@@ -107,7 +108,7 @@ void Controller::executeCommand(std::string command)
       if (m_state == manual)
       {
          m_rc.setRelay(RelayControl::filterPump, false);
-         generateStatusMessage(3);
+         prepareStatusMessage();
 
          cout << "Filter pump is off." << endl;
       }

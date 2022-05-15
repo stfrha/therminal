@@ -9,6 +9,8 @@
 
 #include <time.h>
 
+#include <wiringPi.h>
+
 #include "../../pugixml/src/pugixml.hpp"
 
 #include "tempsensors.h"
@@ -71,7 +73,7 @@ bool TempSensors::writeXmlFile(void)
    return true; 
 }
 
-float TempSensors::sampleSensor(const string&  sensorPath )
+bool TempSensors::sampleSensor(const string&  sensorPath, float& tempRet )
 {
    char buf[100];
    int fd =-1;
@@ -104,7 +106,8 @@ float TempSensors::sampleSensor(const string&  sensorPath )
    // atof: changes string to float.
    value = atof(temp)/1000;
    
-   return value;
+   tempRet = value;
+   return true;
 }
 
 
@@ -172,8 +175,8 @@ bool TempSensors::configurationSequence(void)
    float baseTemp[2];
    float currTemp[2];
    
-   baseTemp[0] = sampleSensor(localSensorPaths[0]);
-   baseTemp[1] = sampleSensor(localSensorPaths[1]);
+   sampleSensor(localSensorPaths[0], baseTemp[0]);
+   sampleSensor(localSensorPaths[1], baseTemp[1]);
    
    int poolSensorIndex = -1;
    
@@ -186,8 +189,8 @@ bool TempSensors::configurationSequence(void)
    {
       sleep(1);
       
-      currTemp[0] = sampleSensor(localSensorPaths[0]);
-      currTemp[1] = sampleSensor(localSensorPaths[1]);
+      sampleSensor(localSensorPaths[0], currTemp[0]);
+      sampleSensor(localSensorPaths[1],currTemp[1]);
       
       cout << "Current temperatures: Sensor 1: " << currTemp[0] << ", Sensor 2: " << currTemp[1] << endl;
       
@@ -221,13 +224,35 @@ bool TempSensors::configurationSequence(void)
 
 TempSensors::TempSensors()
 {
-   // Nothing so far
+   m_sensorPowerControlGpio[solarSensor] = 8;
+   m_sensorPowerControlGpio[poolSensor] = 9;
 }
 
 
+void TempSensors::resetTempSensors()
+{
+   digitalWrite(m_sensorPowerControlGpio[solarSensor], false);
+   digitalWrite(m_sensorPowerControlGpio[poolSensor], false);
+
+   usleep(500000);
+   
+   digitalWrite(m_sensorPowerControlGpio[solarSensor], true);
+   digitalWrite(m_sensorPowerControlGpio[poolSensor], true);
+
+   usleep(250000);
+}
 
 int TempSensors::initializeTempSensors()
 {
+   // Set power control pins to output_iterator   
+   pinMode(m_sensorPowerControlGpio[solarSensor], OUTPUT);
+   pinMode(m_sensorPowerControlGpio[poolSensor], OUTPUT);
+
+   digitalWrite(m_sensorPowerControlGpio[solarSensor], true);
+   digitalWrite(m_sensorPowerControlGpio[poolSensor], true);
+
+   usleep(250000);
+   
    // These two lines mount the device:
    system("sudo modprobe w1-gpio");
    system("sudo modprobe w1-therm");
@@ -270,7 +295,14 @@ void TempSensors::sampleSensors()
 {
    for (int i = 0; i < 2; i++)
    {
-      m_latestTemperature[i] = sampleSensor(m_sensorPaths[i]);
+      float t = 0;
+      while ((!sampleSensor(m_sensorPaths[i], t)) || (t == 0))
+      {
+         cout << "Temp exactly zero, resetting." << endl;
+         resetTempSensors();
+      }
+      
+      m_latestTemperature[i] = t;
    }
 }
 

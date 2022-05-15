@@ -154,6 +154,8 @@ void Comms::handleMessage(int socketFd, char* buffer, int length)
       // We do a check for SREQ here and build the response immediatly
       if (message == "SREQ")
       {
+         cout << "Poor design, sending status response in comms (and not controller)." << endl;
+
          n = write(socketFd, g_latestStatus.c_str(), g_latestStatus.length());
          if (n < 0) 
          {
