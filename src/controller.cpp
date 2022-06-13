@@ -19,6 +19,7 @@ string g_latestStatus;
 
 
 Controller::Controller() :
+   m_log(6525000),
    m_state(automatic)
 {
    
