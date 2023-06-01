@@ -26,13 +26,15 @@ while (!feof($fn))
    // Remove end of line at the end of the line 
    $logLine = str_replace(PHP_EOL, '', $logLine);
 
+
    if (!empty($logLine))
    {
 
       // Latest status is on the form:
       // {pool temp: 06.5};{solar temp 33.9};{filter pump on/off};{solar pump on/off};{manual/auto};{date};{time}
       // Example: "06.2;33.9;on;off;auto;2019-07-14;23:37:45"
-    
+     
+   
       $statusArray = explode(",", $logLine);
       $poolTemp = $statusArray[0];
       $solarTemp  = $statusArray[1];
