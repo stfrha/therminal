@@ -227,6 +227,8 @@ void* Comms::serverThread(void* threadId)
    }
       
    ofstream sockectConfigFile("socket_config.txt");
+   cout << "Writing socket port to socket_config.txt" << endl;
+
    if (sockectConfigFile.is_open())
    {
       sockectConfigFile << g_portNum;
