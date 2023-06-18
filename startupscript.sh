@@ -1,4 +1,4 @@
-
-/home/pi/therminal/bin/therminal &
+cd /home/pi/git/therminal/bin
+./therminal &
 
 

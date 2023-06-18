@@ -28,4 +28,11 @@ sudo reboot
 sudo modprobe w1-gpio
 sudo modprobe w1-therm
 
-Add how to autostart the app
+Add the following line at the bottom of the /etc/rc.local file, but before the "exit 0" statement
+
+
+su - pi -c "/home/pi/git/therminal/startupscript.sh &"
+
+
+Starting the app for the first time, the SW needs to differentiate between the two sensors. It ask to raise the temp on the pool sensor (by holding it in the hand). 
+
